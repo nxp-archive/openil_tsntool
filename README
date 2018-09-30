@@ -1,0 +1,15 @@
+tsntool is a tool to configure TSN funtionalities in user space.
+It can be used for TSN endpoint and TSN switch using netlink
+interface.
+
+1. Libraries requirement
+   Libraries libnl-3.0, libtermcap, libreadline are needed.
+
+2. How to compile the tsntool:
+
+2.1 Setup cross compile environment
+2.2 Compile binary:
+    > source source_arm64.sh <dir_to_kernel_source>
+    > make
+
+    The tsntool and libtsn.so will be generated.
