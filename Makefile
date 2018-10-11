@@ -1,5 +1,5 @@
 LIB_CFLAGS   = $(CFLAGS)
-LIB_LDFLAGS  = $(LDFLAGS)
+LIB_LDFLAGS  ?= $(LDFLAGS)
 LIB_CFLAGS  += -Wall -Wextra -g -fstack-protector-all -Ilib -fPIC
 LIB_CFLAGS  += -Iinclude $(shell pkg-config --cflags libnl-3.0 libnl-genl-3.0) -Imain
 #LIB_LDFLAGS += -lnl-3
