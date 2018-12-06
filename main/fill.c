@@ -706,3 +706,35 @@ int fill_qbu_get_status(char *portname)
 
 	return tsn_qbu_get_status(portname, &pts);
 }
+
+int fill_ct_set(char *portname, uint8_t queue_stat)
+{
+	return tsn_ct_set(portname, queue_stat);
+}
+
+int fill_cbgen_set(char *portname, uint32_t index, uint8_t iport_mask,
+		   uint8_t split_mask, uint8_t seq_len, uint32_t seq_num)
+{
+	struct tsn_seq_gen_conf sg;
+
+	memset(&sg, 0, sizeof(struct tsn_seq_gen_conf));
+	sg.iport_mask = iport_mask;
+	sg.split_mask = split_mask;
+	sg.seq_len = seq_len;
+	sg.seq_num = seq_num;
+
+	return tsn_cbgen_set(portname, index, &sg);
+}
+
+int fill_cbrec_set(char *portname, uint32_t index, uint8_t seq_len,
+		   uint8_t his_len, bool rtag_pop_en)
+{
+	struct tsn_seq_rec_conf sr;
+
+	memset(&sr, 0, sizeof(struct tsn_seq_rec_conf));
+	sr.seq_len = seq_len;
+	sr.his_len = his_len;
+	sr.rtag_pop_en = rtag_pop_en;
+
+	return tsn_cbrec_set(portname, index, &sr);
+}

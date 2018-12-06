@@ -99,6 +99,7 @@ struct cli_cmd cli_commands[] = {
 			{"disable", 0, 0, 'q'},
 			{"index", 1, 0, 'i'},
 			{"streamhandle", 1, 0, 's'},
+			{"ssid", 1, 0, 'y'},
 			{"infacoutport", 1, 0, 'u'},
 			{"outfacoutport", 1, 0, 'v'},
 			{"infacinport", 1, 0, 'w'},
@@ -260,6 +261,35 @@ struct cli_cmd cli_commands[] = {
 				{"device", 1, 0, 'd'},
 			}
 	},
+	{ "ctset", cli_cmd_ct_set, "set cut through queue status",
+		{
+			{"help", 0, 0, 'h'},
+			{"device", 1, 0, 'd'},
+			{"queue_stat", 1, 0, 'q'},
+		}
+	},
+	{ "cbgen", cli_cmd_cbgen_set, "set sequence generate configure",
+		{
+			{"help", 0, 0, 'h'},
+			{"device", 1, 0, 'd'},
+			{"index", 1, 0, 'i'},
+			{"iport_mask", 1, 0, 'p'},
+			{"split_mask", 1, 0, 's'},
+			{"seq_len", 1, 0, 'l'},
+			{"seq_num", 1, 0, 'n'},
+		}
+	},
+	{ "cbrec", cli_cmd_cbrec_set, "set sequence recover configure",
+		{
+			{"help", 0, 0, 'h'},
+			{"device", 1, 0, 'd'},
+			{"index", 1, 0, 'i'},
+			{"seq_len", 1, 0, 'l'},
+			{"his_len", 1, 0, 's'},
+			{"rtag_pop_en", 0, 0, 'r'},
+		}
+	},
+
 	{ "sendpkt", cli_sendip, "send ptp broadcast packet every 5 second",
 		{
 			{"help", 0, 0, 'h'},
@@ -769,6 +799,7 @@ void cmd_cbstreamidset_help(void)
 			--index <value>\n \
 			--device <string>\n \
 			--streamhandle <value>\n \
+			--ssid <value>\n \
 			--infacoutport <value>\n \
 			--outfacoutport <value>\n \
 			--infacinport <value>\n \
@@ -791,6 +822,7 @@ int cli_cmd_streamid_set(UNUSED int argc, UNUSED char *argv[], UNUSED int cmdnum
 	uint8_t enable = 0, disable = 0;
 	uint32_t index = 0;
 	int32_t streamhandle = -1;
+	int32_t ssid = -1;
 	uint32_t infacoutport = 0, outfacoutport = 0, infacinport = 0, outfacinport = 0;
 	uint8_t streamidtype = 0, typeflag = 0;
 	uint64_t mac = 0;
@@ -805,7 +837,7 @@ int cli_cmd_streamid_set(UNUSED int argc, UNUSED char *argv[], UNUSED int cmdnum
 
 	optind = 0;
 
-	while ((c = getopt_long(argc, argv, "d:eqi:s:u:v:w:x:nftpm:g:l:h",
+	while ((c = getopt_long(argc, argv, "d:eqi:s:y:u:v:w:x:nftpm:g:l:h",
 			 long_options, &option_index)) != -1) {
 		switch (c) {
 		case 'd':
@@ -835,6 +867,12 @@ int cli_cmd_streamid_set(UNUSED int argc, UNUSED char *argv[], UNUSED int cmdnum
 			if (ret < 0)
 				return -1;
 			streamhandle = (int32_t)strtol(optarg, NULL, ret);
+			break;
+		case 'y':
+			ret = is_hex_oct(optarg);
+			if (ret < 0)
+				return -1;
+			ssid = (int32_t)strtol(optarg, NULL, ret);
 			break;
 		/* infacoutport */
 		case 'u':
@@ -960,6 +998,7 @@ int cli_cmd_streamid_set(UNUSED int argc, UNUSED char *argv[], UNUSED int cmdnum
 	}
 
 	streamid.handle = streamhandle;
+	streamid.ssid = ssid;
 	streamid.ifac_oport = infacoutport;
 	streamid.ofac_oport = outfacoutport;
 	streamid.ifac_iport = infacinport;
@@ -2018,4 +2057,216 @@ int cli_regtool(UNUSED int argc, UNUSED char *argv[], UNUSED int cmdnumber)
 int cli_ptptool(UNUSED int argc, UNUSED char *argv[], UNUSED int cmdnumber)
 {
 	return testptp(argc, argv);
+}
+
+void cmd_ctset_help(void)
+{
+	printf("cut through set\n \
+			--device <ifname>\n \
+			--queue_stat <value>\n \
+			--help\n\n");
+}
+
+int cli_cmd_ct_set(UNUSED int argc, UNUSED char *argv[], UNUSED int cmdnumber)
+{
+	int c;
+	int ret;
+	int device = 0;
+	uint8_t queue_stat = 0;
+	struct option *long_options = &cli_commands[cmdnumber].long_options[0];
+	int option_index = 0;
+	char portname[IF_NAMESIZE];
+
+	optind = 0;
+
+	while ((c = getopt_long(argc, argv, "d:h:q", long_options, &option_index)) != -1) {
+		switch (c) {
+		case 'd':
+			strcpy(portname, optarg);
+			logv("device is %s\n", portname);
+			device = 1;
+			break;
+		case 'h':
+			cmd_ctset_help();
+			return 0;
+		case 'q':
+			ret = is_hex_oct(optarg);
+			if (ret < 0)
+				return -1;
+			queue_stat = (uint8_t)strtoul(optarg, NULL, ret);
+			break;
+		default:
+			cmd_ctset_help();
+			return -1;
+		}
+	}
+
+	if (!device) {
+		/* Get all the devices with ct capability */
+		loge("No --device not supported\n");
+	} else {
+		fill_ct_set(portname, queue_stat);
+	}
+
+	return 0;
+}
+
+void cmd_cbgenset_help(void)
+{
+	printf("802.1cb generate set\n \
+			--device <ifname>\n \
+			--index <value>\n \
+			--iport_mask <value>\n \
+			--split_mask <value>\n \
+			--seq_len <value>\n \
+			--seq_num <value>\n \
+			--help\n\n");
+}
+
+int cli_cmd_cbgen_set(UNUSED int argc, UNUSED char *argv[], UNUSED int cmdnumber)
+{
+	int c;
+	int ret;
+	int device = 0;
+	uint32_t index = 0;
+	uint8_t queue_stat = 0;
+	uint8_t iport_mask = 0;
+	uint8_t split_mask = 0;
+	uint8_t seq_len = 0;
+	uint32_t seq_num = 0;
+	struct option *long_options = &cli_commands[cmdnumber].long_options[0];
+	int option_index = 0;
+	char portname[IF_NAMESIZE];
+
+	optind = 0;
+
+	while ((c = getopt_long(argc, argv, "d:h:i:p:s:l:n", long_options, &option_index)) != -1) {
+		switch (c) {
+		case 'd':
+			strcpy(portname, optarg);
+			logv("device is %s\n", portname);
+			device = 1;
+			break;
+		case 'h':
+			cmd_cbgenset_help();
+			return 0;
+		case 'i':
+			ret = is_hex_oct(optarg);
+			if (ret < 0)
+				return -1;
+			index = (uint32_t)strtoul(optarg, NULL, ret);
+			break;
+		case 'p':
+			ret = is_hex_oct(optarg);
+			if (ret < 0)
+				 return -1;
+			iport_mask = (uint8_t)strtoul(optarg, NULL, ret);
+			break;
+		case 's':
+			ret = is_hex_oct(optarg);
+			if (ret < 0)
+				 return -1;
+			split_mask = (uint8_t)strtoul(optarg, NULL, ret);
+			break;
+		case 'l':
+			ret = is_hex_oct(optarg);
+			if (ret < 0)
+				 return -1;
+			seq_len = (uint8_t)strtoul(optarg, NULL, ret);
+			break;
+		case 'n':
+			ret = is_hex_oct(optarg);
+			if (ret < 0)
+				 return -1;
+			seq_num = (uint32_t)strtoul(optarg, NULL, ret);
+			break;
+		default:
+			cmd_cbgenset_help();
+			return -1;
+		}
+	}
+
+	if (!device) {
+		/* Get all the devices with ct capability */
+		loge("No --device not supported\n");
+	} else {
+		fill_cbgen_set(portname, index, iport_mask,
+			       split_mask, seq_len, seq_num);
+	}
+
+	return 0;
+}
+
+void cmd_cbrecset_help(void)
+{
+	printf("802.1cb recover set\n \
+			--device <ifname>\n \
+			--index <value>\n \
+			--seq_len <value>\n \
+			--his_len <value>\n \
+			--rtag_pop_en\n \
+			--help\n\n");
+}
+
+int cli_cmd_cbrec_set(UNUSED int argc, UNUSED char *argv[], UNUSED int cmdnumber)
+{
+	int c;
+	int ret;
+	int device = 0;
+	uint32_t index = 0;
+	uint8_t seq_len = 0;
+	uint8_t his_len = 0;
+	bool rtag_pop_en = 0;
+	struct option *long_options = &cli_commands[cmdnumber].long_options[0];
+	int option_index = 0;
+	char portname[IF_NAMESIZE];
+
+	optind = 0;
+
+	while ((c = getopt_long(argc, argv, "d:h:i:l:s:r", long_options, &option_index)) != -1) {
+		switch (c) {
+		case 'd':
+			strcpy(portname, optarg);
+			logv("device is %s\n", portname);
+			device = 1;
+			break;
+		case 'h':
+			cmd_cbrecset_help();
+			return 0;
+		case 'i':
+			ret = is_hex_oct(optarg);
+			if (ret < 0)
+				return -1;
+			index = (uint32_t)strtoul(optarg, NULL, ret);
+			break;
+		case 'l':
+			ret = is_hex_oct(optarg);
+			if (ret < 0)
+				 return -1;
+			seq_len = (uint8_t)strtoul(optarg, NULL, ret);
+			break;
+		case 's':
+			ret = is_hex_oct(optarg);
+			if (ret < 0)
+				 return -1;
+			his_len = (uint8_t)strtoul(optarg, NULL, ret);
+			break;
+		case 'r':
+			rtag_pop_en = 1;
+			break;
+		default:
+			cmd_cbrecset_help();
+			return -1;
+		}
+	}
+
+	if (!device) {
+		/* Get all the devices with ct capability */
+		loge("No --device not supported\n");
+	} else {
+		fill_cbrec_set(portname, index, seq_len,
+			       his_len, rtag_pop_en);
+	}
+
+	return 0;
 }
