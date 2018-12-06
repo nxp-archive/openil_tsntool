@@ -40,4 +40,7 @@ int fill_tsd_set(char *portname, bool enable, uint32_t period, uint32_t frame_nu
 int fill_tsd_get(char *portname);
 int fill_qbu_set(char *portname, uint8_t preemptable);
 int fill_qbu_get_status(char *portname);
+int fill_ct_set(char *portname, uint8_t queue_stat);
+int fill_cbgen_set(char *portname, uint32_t index, uint8_t iport_mask, uint8_t split_mask, uint8_t seq_len, uint32_t seq_num);
+int fill_cbrec_set(char *portname, uint32_t index, uint8_t seq_len, uint8_t his_len, bool rtag_pop_en);
 #endif

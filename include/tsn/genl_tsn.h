@@ -11,6 +11,10 @@
 #include <netlink/msg.h>
 #include <linux/genetlink.h>
 
+typedef unsigned char u8;
+typedef unsigned int u32;
+typedef unsigned short u16;
+
 typedef enum boolean {
 	FALSE,
 	TRUE,
@@ -91,6 +95,7 @@ enum {
 	TSN_STREAMID_ATTR_ENABLE,
 	TSN_STREAMID_ATTR_DISABLE,
 	TSN_STREAMID_ATTR_STREAM_HANDLE,
+	TSN_STREAMID_ATTR_SSID,
 	TSN_STREAMID_ATTR_IFOP,
 	TSN_STREAMID_ATTR_OFOP,
 	TSN_STREAMID_ATTR_IFIP,
@@ -328,4 +333,7 @@ int tsn_tsd_set(char *portname, bool enable, uint32_t period, uint32_t frame_num
 int tsn_tsd_get(char *portname);
 int tsn_qbu_set(char *portname, uint8_t pt_vector);
 int tsn_qbu_get_status(char *portname, struct tsn_preempt_status *pts);
+int tsn_ct_set(char *portname, uint8_t pt_vector);
+int tsn_cbgen_set(char *portname, uint32_t index, struct tsn_seq_gen_conf *sg);
+int tsn_cbrec_set(char *portname, uint32_t index, struct tsn_seq_rec_conf *sr);
 #endif /* _TSN_GENETLINK_KERN_H */
