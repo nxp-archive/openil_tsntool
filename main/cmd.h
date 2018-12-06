@@ -41,4 +41,7 @@ int cli_cmd_qbu_get_status(UNUSED int argc, UNUSED char *argv[], UNUSED int cmdn
 int cli_sendip(UNUSED int argc, UNUSED char *argv[], UNUSED int cmdnumber);
 int cli_regtool(UNUSED int argc, UNUSED char *argv[], UNUSED int cmdnumber);
 int cli_ptptool(UNUSED int argc, UNUSED char *argv[], UNUSED int cmdnumber);
+int cli_cmd_ct_set(UNUSED int argc, UNUSED char *argv[], UNUSED int cmdnumber);
+int cli_cmd_cbgen_set(UNUSED int argc, UNUSED char *argv[], UNUSED int cmdnumber);
+int cli_cmd_cbrec_set(UNUSED int argc, UNUSED char *argv[], UNUSED int cmdnumber);
 #endif
