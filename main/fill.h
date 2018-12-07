@@ -43,4 +43,5 @@ int fill_qbu_get_status(char *portname);
 int fill_ct_set(char *portname, uint8_t queue_stat);
 int fill_cbgen_set(char *portname, uint32_t index, uint8_t iport_mask, uint8_t split_mask, uint8_t seq_len, uint32_t seq_num);
 int fill_cbrec_set(char *portname, uint32_t index, uint8_t seq_len, uint8_t his_len, bool rtag_pop_en);
+int fill_pcpmap_set(char *portname, bool enable);
 #endif
