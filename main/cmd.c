@@ -99,7 +99,6 @@ struct cli_cmd cli_commands[] = {
 			{"disable", 0, 0, 'q'},
 			{"index", 1, 0, 'i'},
 			{"streamhandle", 1, 0, 's'},
-			{"ssid", 1, 0, 'y'},
 			{"infacoutport", 1, 0, 'u'},
 			{"outfacoutport", 1, 0, 'v'},
 			{"infacinport", 1, 0, 'w'},
@@ -807,7 +806,6 @@ void cmd_cbstreamidset_help(void)
 			--index <value>\n \
 			--device <string>\n \
 			--streamhandle <value>\n \
-			--ssid <value>\n \
 			--infacoutport <value>\n \
 			--outfacoutport <value>\n \
 			--infacinport <value>\n \
@@ -830,7 +828,6 @@ int cli_cmd_streamid_set(UNUSED int argc, UNUSED char *argv[], UNUSED int cmdnum
 	uint8_t enable = 0, disable = 0;
 	uint32_t index = 0;
 	int32_t streamhandle = -1;
-	int32_t ssid = -1;
 	uint32_t infacoutport = 0, outfacoutport = 0, infacinport = 0, outfacinport = 0;
 	uint8_t streamidtype = 0, typeflag = 0;
 	uint64_t mac = 0;
@@ -845,7 +842,7 @@ int cli_cmd_streamid_set(UNUSED int argc, UNUSED char *argv[], UNUSED int cmdnum
 
 	optind = 0;
 
-	while ((c = getopt_long(argc, argv, "d:eqi:s:y:u:v:w:x:nftpm:g:l:h",
+	while ((c = getopt_long(argc, argv, "d:eqi:s:u:v:w:x:nftpm:g:l:h",
 			 long_options, &option_index)) != -1) {
 		switch (c) {
 		case 'd':
@@ -875,12 +872,6 @@ int cli_cmd_streamid_set(UNUSED int argc, UNUSED char *argv[], UNUSED int cmdnum
 			if (ret < 0)
 				return -1;
 			streamhandle = (int32_t)strtol(optarg, NULL, ret);
-			break;
-		case 'y':
-			ret = is_hex_oct(optarg);
-			if (ret < 0)
-				return -1;
-			ssid = (int32_t)strtol(optarg, NULL, ret);
 			break;
 		/* infacoutport */
 		case 'u':
@@ -1006,7 +997,6 @@ int cli_cmd_streamid_set(UNUSED int argc, UNUSED char *argv[], UNUSED int cmdnum
 	}
 
 	streamid.handle = streamhandle;
-	streamid.ssid = ssid;
 	streamid.ifac_oport = infacoutport;
 	streamid.ofac_oport = outfacoutport;
 	streamid.ifac_iport = infacinport;

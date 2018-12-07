@@ -62,8 +62,6 @@ int tsn_cb_streamid_set(char *portname, uint32_t sid_index, bool enable,
 
 	tsn_send_cmd_append_attr(msg, TSN_STREAMID_ATTR_STREAM_HANDLE,
 			&(sid->handle), sizeof(sid->handle));
-	tsn_send_cmd_append_attr(msg, TSN_STREAMID_ATTR_SSID,
-			&(sid->ssid), sizeof(sid->ssid));
 	tsn_send_cmd_append_attr(msg, TSN_STREAMID_ATTR_IFOP,
 			&(sid->ifac_oport), sizeof(sid->ifac_oport));
 	tsn_send_cmd_append_attr(msg, TSN_STREAMID_ATTR_OFOP,
