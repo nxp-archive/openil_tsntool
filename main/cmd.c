@@ -290,6 +290,14 @@ struct cli_cmd cli_commands[] = {
 		}
 	},
 
+	{ "pcpmap", cli_cmd_pcpmap_set, "set queues map to PCP tag",
+		{
+			{"help", 0, 0, 'h'},
+			{"device", 1, 0, 'd'},
+			{"enable", 0, 0, 'e'},
+		}
+	},
+
 	{ "sendpkt", cli_sendip, "send ptp broadcast packet every 5 second",
 		{
 			{"help", 0, 0, 'h'},
@@ -2266,6 +2274,55 @@ int cli_cmd_cbrec_set(UNUSED int argc, UNUSED char *argv[], UNUSED int cmdnumber
 	} else {
 		fill_cbrec_set(portname, index, seq_len,
 			       his_len, rtag_pop_en);
+	}
+
+	return 0;
+}
+
+void cmd_pcpmap_help(void)
+{
+	printf("Mapping PCP tags to queue number\n \
+			--device <ifname>\n \
+			--enable\n \
+			--help\n\n");
+}
+
+int cli_cmd_pcpmap_set(UNUSED int argc, UNUSED char *argv[], UNUSED int cmdnumber)
+{
+	int c;
+	int ret;
+	int device = 0;
+	bool enable = 0;
+	struct option *long_options = &cli_commands[cmdnumber].long_options[0];
+	int option_index = 0;
+	char portname[IF_NAMESIZE];
+
+	optind = 0;
+
+	while ((c = getopt_long(argc, argv, "d:h:e", long_options, &option_index)) != -1) {
+		switch (c) {
+		case 'd':
+			strcpy(portname, optarg);
+			logv("device is %s\n", portname);
+			device = 1;
+			break;
+		case 'h':
+			cmd_pcpmap_help();
+			return 0;
+		case 'e':
+			enable = 1;
+			break;
+		default:
+			cmd_pcpmap_help();
+			return -1;
+		}
+	}
+
+	if (!device) {
+		/* Get all the devices with ct capability */
+		loge("No --device not supported\n");
+	} else {
+		fill_pcpmap_set(portname, enable);
 	}
 
 	return 0;

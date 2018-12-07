@@ -336,4 +336,5 @@ int tsn_qbu_get_status(char *portname, struct tsn_preempt_status *pts);
 int tsn_ct_set(char *portname, uint8_t pt_vector);
 int tsn_cbgen_set(char *portname, uint32_t index, struct tsn_seq_gen_conf *sg);
 int tsn_cbrec_set(char *portname, uint32_t index, struct tsn_seq_rec_conf *sr);
+int tsn_pcpmap_set(char *portname, bool enable);
 #endif /* _TSN_GENETLINK_KERN_H */
