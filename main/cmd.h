@@ -44,4 +44,5 @@ int cli_ptptool(UNUSED int argc, UNUSED char *argv[], UNUSED int cmdnumber);
 int cli_cmd_ct_set(UNUSED int argc, UNUSED char *argv[], UNUSED int cmdnumber);
 int cli_cmd_cbgen_set(UNUSED int argc, UNUSED char *argv[], UNUSED int cmdnumber);
 int cli_cmd_cbrec_set(UNUSED int argc, UNUSED char *argv[], UNUSED int cmdnumber);
+int cli_cmd_pcpmap_set(UNUSED int argc, UNUSED char *argv[], UNUSED int cmdnumber);
 #endif

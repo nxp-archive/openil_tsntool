@@ -62,8 +62,6 @@ int tsn_cb_streamid_set(char *portname, uint32_t sid_index, bool enable,
 
 	tsn_send_cmd_append_attr(msg, TSN_STREAMID_ATTR_STREAM_HANDLE,
 			&(sid->handle), sizeof(sid->handle));
-	tsn_send_cmd_append_attr(msg, TSN_STREAMID_ATTR_SSID,
-			&(sid->ssid), sizeof(sid->ssid));
 	tsn_send_cmd_append_attr(msg, TSN_STREAMID_ATTR_IFOP,
 			&(sid->ifac_oport), sizeof(sid->ifac_oport));
 	tsn_send_cmd_append_attr(msg, TSN_STREAMID_ATTR_OFOP,
@@ -1218,6 +1216,43 @@ int tsn_cbrec_set(char *portname, uint32_t index,
 		tsn_send_cmd_append_attr(msg, TSN_CBREC_ATTR_TAG_POP_EN,
 					 &(sr->rtag_pop_en), 0);
 	tsn_nla_nest_end(msg, cbrecattr);
+
+	ret = tsn_send_to_kernel(msg);
+	if (ret < 0) {
+		loge("genl send to kernel error\n");
+		return -1;
+	}
+
+	tsn_msg_recv_analysis();
+	return 0;
+}
+
+int tsn_pcpmap_set(char *portname, bool enable)
+{
+	struct msgtemplate *msg;
+	struct nlattr *pcpmapattr;
+	int ret;
+
+	if (portname == NULL)
+		return -1;
+
+	msg = tsn_send_cmd_prepare(TSN_CMD_PCPMAP_SET);
+	if (msg == NULL) {
+		loge("fail to allocate genl msg.\n");
+		return -1;
+	}
+
+	tsn_send_cmd_append_attr(msg, TSN_ATTR_IFNAME, portname, strlen(portname) + 1);
+
+
+	pcpmapattr = tsn_nla_nest_start(msg, TSN_ATTR_PCPMAP);
+	if (!pcpmapattr)
+		return -1;
+
+	if(enable)
+		tsn_send_cmd_append_attr(msg, TSN_PCPMAP_ATTR_ENABLE,
+					 &(enable), 0);
+	tsn_nla_nest_end(msg, pcpmapattr);
 
 	ret = tsn_send_to_kernel(msg);
 	if (ret < 0) {

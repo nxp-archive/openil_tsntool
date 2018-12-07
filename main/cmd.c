@@ -99,7 +99,6 @@ struct cli_cmd cli_commands[] = {
 			{"disable", 0, 0, 'q'},
 			{"index", 1, 0, 'i'},
 			{"streamhandle", 1, 0, 's'},
-			{"ssid", 1, 0, 'y'},
 			{"infacoutport", 1, 0, 'u'},
 			{"outfacoutport", 1, 0, 'v'},
 			{"infacinport", 1, 0, 'w'},
@@ -287,6 +286,14 @@ struct cli_cmd cli_commands[] = {
 			{"seq_len", 1, 0, 'l'},
 			{"his_len", 1, 0, 's'},
 			{"rtag_pop_en", 0, 0, 'r'},
+		}
+	},
+
+	{ "pcpmap", cli_cmd_pcpmap_set, "set queues map to PCP tag",
+		{
+			{"help", 0, 0, 'h'},
+			{"device", 1, 0, 'd'},
+			{"enable", 0, 0, 'e'},
 		}
 	},
 
@@ -799,7 +806,6 @@ void cmd_cbstreamidset_help(void)
 			--index <value>\n \
 			--device <string>\n \
 			--streamhandle <value>\n \
-			--ssid <value>\n \
 			--infacoutport <value>\n \
 			--outfacoutport <value>\n \
 			--infacinport <value>\n \
@@ -822,7 +828,6 @@ int cli_cmd_streamid_set(UNUSED int argc, UNUSED char *argv[], UNUSED int cmdnum
 	uint8_t enable = 0, disable = 0;
 	uint32_t index = 0;
 	int32_t streamhandle = -1;
-	int32_t ssid = -1;
 	uint32_t infacoutport = 0, outfacoutport = 0, infacinport = 0, outfacinport = 0;
 	uint8_t streamidtype = 0, typeflag = 0;
 	uint64_t mac = 0;
@@ -837,7 +842,7 @@ int cli_cmd_streamid_set(UNUSED int argc, UNUSED char *argv[], UNUSED int cmdnum
 
 	optind = 0;
 
-	while ((c = getopt_long(argc, argv, "d:eqi:s:y:u:v:w:x:nftpm:g:l:h",
+	while ((c = getopt_long(argc, argv, "d:eqi:s:u:v:w:x:nftpm:g:l:h",
 			 long_options, &option_index)) != -1) {
 		switch (c) {
 		case 'd':
@@ -867,12 +872,6 @@ int cli_cmd_streamid_set(UNUSED int argc, UNUSED char *argv[], UNUSED int cmdnum
 			if (ret < 0)
 				return -1;
 			streamhandle = (int32_t)strtol(optarg, NULL, ret);
-			break;
-		case 'y':
-			ret = is_hex_oct(optarg);
-			if (ret < 0)
-				return -1;
-			ssid = (int32_t)strtol(optarg, NULL, ret);
 			break;
 		/* infacoutport */
 		case 'u':
@@ -998,7 +997,6 @@ int cli_cmd_streamid_set(UNUSED int argc, UNUSED char *argv[], UNUSED int cmdnum
 	}
 
 	streamid.handle = streamhandle;
-	streamid.ssid = ssid;
 	streamid.ifac_oport = infacoutport;
 	streamid.ofac_oport = outfacoutport;
 	streamid.ifac_iport = infacinport;
@@ -2266,6 +2264,55 @@ int cli_cmd_cbrec_set(UNUSED int argc, UNUSED char *argv[], UNUSED int cmdnumber
 	} else {
 		fill_cbrec_set(portname, index, seq_len,
 			       his_len, rtag_pop_en);
+	}
+
+	return 0;
+}
+
+void cmd_pcpmap_help(void)
+{
+	printf("Mapping PCP tags to queue number\n \
+			--device <ifname>\n \
+			--enable\n \
+			--help\n\n");
+}
+
+int cli_cmd_pcpmap_set(UNUSED int argc, UNUSED char *argv[], UNUSED int cmdnumber)
+{
+	int c;
+	int ret;
+	int device = 0;
+	bool enable = 0;
+	struct option *long_options = &cli_commands[cmdnumber].long_options[0];
+	int option_index = 0;
+	char portname[IF_NAMESIZE];
+
+	optind = 0;
+
+	while ((c = getopt_long(argc, argv, "d:h:e", long_options, &option_index)) != -1) {
+		switch (c) {
+		case 'd':
+			strcpy(portname, optarg);
+			logv("device is %s\n", portname);
+			device = 1;
+			break;
+		case 'h':
+			cmd_pcpmap_help();
+			return 0;
+		case 'e':
+			enable = 1;
+			break;
+		default:
+			cmd_pcpmap_help();
+			return -1;
+		}
+	}
+
+	if (!device) {
+		/* Get all the devices with ct capability */
+		loge("No --device not supported\n");
+	} else {
+		fill_pcpmap_set(portname, enable);
 	}
 
 	return 0;

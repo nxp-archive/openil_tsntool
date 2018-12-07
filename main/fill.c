@@ -738,3 +738,8 @@ int fill_cbrec_set(char *portname, uint32_t index, uint8_t seq_len,
 
 	return tsn_cbrec_set(portname, index, &sr);
 }
+
+int fill_pcpmap_set(char *portname, bool enable)
+{
+	return tsn_pcpmap_set(portname, enable);
+}
