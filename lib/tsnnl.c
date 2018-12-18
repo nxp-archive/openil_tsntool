@@ -10,6 +10,36 @@
 #include <main.h>
 #include "tsn/genl_tsn.h"
 
+struct linkpara qbv_base[TSN_QBV_ATTR_MAX + 1] = {
+	[TSN_QBV_ATTR_CONFIGCHANGE]			= {0,0,0},
+	[TSN_QBV_ATTR_GRANULARITY]			= {0,0,0},
+	[TSN_QBV_ATTR_CONFIGCHANGEERROR]	= {0,0,0},
+	[TSN_QBV_ATTR_ADMINENTRY]   		= { NLA_NESTED, 1, ""},
+	[TSN_QBV_ATTR_OPERENTRY] 			= { NLA_NESTED, 1, ""},
+	[TSN_QBV_ATTR_ENABLE] 				= { NLA_FLAG, 2, "enable"},
+	[TSN_QBV_ATTR_DISABLE] 				= { NLA_FLAG, 2 , "disable"},
+	[TSN_QBV_ATTR_CONFIGCHANGETIME] 	= { NLA_U64, 2, "configchangetime"},
+	[TSN_QBV_ATTR_MAXSDU] 				= { NLA_U32, 2, "maxsdu"},
+	[TSN_QBV_ATTR_CURRENTTIME] 			= { NLA_U64, 2, "currenttime"},
+	[TSN_QBV_ATTR_CONFIGPENDING] 		= { NLA_FLAG, 2, "configpending"},
+	[TSN_QBV_ATTR_LISTMAX] 				= { NLA_U32, 2, "listmax"},
+};
+
+struct linkpara qbv_ctrl[TSN_QBV_ATTR_CTRL_MAX + 1] = {
+	[TSN_QBV_ATTR_CTRL_LISTCOUNT]		= {NLA_U32, 2, "listcount"},
+	[TSN_QBV_ATTR_CTRL_GATESTATE]		= {NLA_U8, 2, "gatestate" },
+	[TSN_QBV_ATTR_CTRL_CYCLETIME]		= {NLA_U32, 2, "cycletime"},
+	[TSN_QBV_ATTR_CTRL_CYCLETIMEEXT]	= {NLA_U32, 2, "cycletimeext" },
+	[TSN_QBV_ATTR_CTRL_BASETIME]		= {NLA_U64, 2, "basetime" },
+	[TSN_QBV_ATTR_CTRL_LISTENTRY]		= {NLA_NESTED, 1 , ""},
+};
+
+struct linkpara qbv_entry[TSN_QBV_ATTR_ENTRY_MAX + 1] = {
+	[TSN_QBV_ATTR_ENTRY_ID]	= {NLA_U32, 2, "entryid" },
+	[TSN_QBV_ATTR_ENTRY_GC]	= {NLA_U8, 2, "gate" },
+	[TSN_QBV_ATTR_ENTRY_TM]	= {NLA_U32, 2, "timeperiod" },
+};
+
 int tsn_qci_streampara_get(struct tsn_qci_psfp_stream_param *sp)
 {
 	return -1;
@@ -113,7 +143,7 @@ sendmsg1:
 		return -1;
 	}
 
-	tsn_msg_recv_analysis();
+	tsn_msg_recv_analysis(NULL);
 
 	return 0;
 
@@ -168,7 +198,7 @@ int tsn_cb_streamid_get(char *portname, uint32_t sid_index, struct tsn_cb_stream
 
 	/* TODO : fill the sid */
 
-	tsn_msg_recv_analysis();
+	tsn_msg_recv_analysis(NULL);
 
 	return 0;
 
@@ -264,7 +294,7 @@ sendmsg1:
 		return -1;
 	}
 
-	tsn_msg_recv_analysis();
+	tsn_msg_recv_analysis(NULL);
 
 	return 0;
 
@@ -318,7 +348,7 @@ int tsn_qci_psfp_sfi_get(char *portname, uint32_t sfi_handle,
 	}
 
 	/* TODO: receive the feedback and return */
-	tsn_msg_recv_analysis();
+	tsn_msg_recv_analysis(NULL);
 
 	return 0;
 
@@ -371,7 +401,7 @@ int tsn_qci_psfp_sfi_counters_get(char *portname, uint32_t sfi_handle,
 	}
 
 	/* TODO: receive the feedback and return */
-	tsn_msg_recv_analysis();
+	tsn_msg_recv_analysis(NULL);
 
 	return 0;
 
@@ -510,7 +540,7 @@ out2:
 		return -1;
 	}
 
-	tsn_msg_recv_analysis();
+	tsn_msg_recv_analysis(NULL);
 
 	return 0;
 }
@@ -547,7 +577,7 @@ int tsn_qci_psfp_sgi_get(char *portname, uint32_t sgi_handle, struct tsn_qci_psf
 	}
 
 	/* TODO: receive the feedback and return */
-	tsn_msg_recv_analysis();
+	tsn_msg_recv_analysis(NULL);
 
 	return 0;
 
@@ -588,7 +618,7 @@ int tsn_qci_psfp_sgi_status_get(char *portname, uint32_t sgi_handle, struct tsn_
 	}
 
 	/* TODO: receive the feedback and return */
-	tsn_msg_recv_analysis();
+	tsn_msg_recv_analysis(NULL);
 
 	return 0;
 
@@ -660,7 +690,7 @@ sendmsg:
 		return -1;
 	}
 
-	tsn_msg_recv_analysis();
+	tsn_msg_recv_analysis(NULL);
 
 	return 0;
 
@@ -703,7 +733,7 @@ int tsn_qci_psfp_fmi_get(char *portname, uint32_t fmi_id, struct tsn_qci_psfp_fm
 		return -1;
 	}
 
-	tsn_msg_recv_analysis();
+	tsn_msg_recv_analysis(NULL);
 
 	return 0;
 
@@ -826,7 +856,7 @@ sendmsg1:
 		return -1;
 	}
 
-	tsn_msg_recv_analysis();
+	tsn_msg_recv_analysis(NULL);
 
 	return 0;
 }
@@ -841,6 +871,7 @@ int tsn_qos_port_qbv_get(char *portname, struct tsn_qbv_conf *qbvconf)
 {
 	struct msgtemplate *msg;
 	int ret;
+	struct showtable qbvget; 
 
 	if (qbvconf == NULL)
 		return -1;
@@ -859,7 +890,16 @@ int tsn_qos_port_qbv_get(char *portname, struct tsn_qbv_conf *qbvconf)
 		return -1;
 	}
 	/* TODO save to tsn_qbv_conf and admin list */
-	tsn_msg_recv_analysis();
+	qbvget.type = TSN_ATTR_QBV;
+	qbvget.len1 = TSN_QBV_ATTR_MAX;
+	qbvget.link1 = &qbv_base;
+	qbvget.len2 = TSN_QBV_ATTR_CTRL_MAX;
+	qbvget.link2 = &qbv_ctrl;
+	qbvget.len3 = TSN_QBV_ATTR_ENTRY_MAX;
+	qbvget.link3 = &qbv_entry;
+
+	tsn_msg_recv_analysis(&qbvget);
+
 	return 0;
 }
 
@@ -867,6 +907,7 @@ int tsn_qos_port_qbv_status_get(char *portname, struct tsn_qbv_status *qbvstatus
 {
 	struct msgtemplate *msg;
 	int ret;
+	struct showtable qbvget;
 
 	if (qbvstatus == NULL)
 		return -1;
@@ -885,7 +926,16 @@ int tsn_qos_port_qbv_status_get(char *portname, struct tsn_qbv_status *qbvstatus
 		return -1;
 	}
 	/* TODO save to struct tsn_qbv_status and oper list */
-	tsn_msg_recv_analysis();
+	qbvget.type = TSN_ATTR_QBV;
+	qbvget.len1 = TSN_QBV_ATTR_MAX;
+	qbvget.link1 = &qbv_base;
+	qbvget.len2 = TSN_QBV_ATTR_CTRL_MAX;
+	qbvget.link2 = &qbv_ctrl;
+	qbvget.len3 = TSN_QBV_ATTR_ENTRY_MAX;
+	qbvget.link3 = &qbv_entry;
+
+	tsn_msg_recv_analysis(&qbvget);
+
 	return 0;
 }
 
@@ -923,7 +973,7 @@ int tsn_cbs_set(char *portname, uint8_t tc, uint8_t percent)
 		return -1;
 	}
 
-	tsn_msg_recv_analysis();
+	tsn_msg_recv_analysis(NULL);
 	return 0;
 }
 
@@ -958,7 +1008,7 @@ int tsn_cbs_get(char *portname, uint8_t tc)
 		return -1;
 	}
 
-	tsn_msg_recv_analysis();
+	tsn_msg_recv_analysis(NULL);
 	return 0;
 }
 
@@ -1003,7 +1053,7 @@ int tsn_tsd_set(char *portname, bool enable, uint32_t period, uint32_t frame_num
 		return -1;
 	}
 
-	tsn_msg_recv_analysis();
+	tsn_msg_recv_analysis(NULL);
 	return 0;
 }
 
@@ -1036,7 +1086,7 @@ int tsn_tsd_get(char *portname)
 			return -1;
 		}
 
-		tsn_msg_recv_analysis();
+		tsn_msg_recv_analysis(NULL);
 		return 0;
 }
 
@@ -1072,7 +1122,7 @@ int tsn_qbu_set(char *portname, uint8_t pt_vector)
 		return -1;
 	}
 
-	tsn_msg_recv_analysis();
+	tsn_msg_recv_analysis(NULL);
 	return 0;
 }
 
@@ -1098,7 +1148,7 @@ int tsn_qbu_get_status(char *portname, struct tsn_preempt_status *pts)
 		return -1;
 	}
 
-	tsn_msg_recv_analysis();
+	tsn_msg_recv_analysis(NULL);
 	return 0;
 }
 
@@ -1134,7 +1184,7 @@ int tsn_ct_set(char *portname, uint8_t pt_vector)
 		return -1;
 	}
 
-	tsn_msg_recv_analysis();
+	tsn_msg_recv_analysis(NULL);
 	return 0;
 }
 
@@ -1179,7 +1229,7 @@ int tsn_cbgen_set(char *portname, uint32_t index,
 		return -1;
 	}
 
-	tsn_msg_recv_analysis();
+	tsn_msg_recv_analysis(NULL);
 	return 0;
 }
 
@@ -1223,7 +1273,7 @@ int tsn_cbrec_set(char *portname, uint32_t index,
 		return -1;
 	}
 
-	tsn_msg_recv_analysis();
+	tsn_msg_recv_analysis(NULL);
 	return 0;
 }
 
@@ -1260,6 +1310,6 @@ int tsn_pcpmap_set(char *portname, bool enable)
 		return -1;
 	}
 
-	tsn_msg_recv_analysis();
+	tsn_msg_recv_analysis(NULL);
 	return 0;
 }
