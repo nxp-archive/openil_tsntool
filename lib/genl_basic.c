@@ -283,7 +283,7 @@ int tsn_msg_check(struct msgtemplate msg, int rep_len)
 	return 0;
 }
 
-void tsn_msg_recv_analysis(void)
+void tsn_msg_recv_analysis(struct showtable *linkdata)
 {
 	int rep_len;
 	int len, len1;
@@ -293,6 +293,12 @@ void tsn_msg_recv_analysis(void)
 	int data;
 	char *string;
 	int remain;
+	int tsn;
+
+	if (!linkdata)
+		tsn = 0;
+	else
+		tsn = linkdata->type;
 
 	/* get kernel message echo */
 	rep_len = recv(glb_conf.genl_fd, &msg, sizeof(msg), 0);
@@ -325,65 +331,128 @@ void tsn_msg_recv_analysis(void)
 			string = (char *) NLA_DATA(na);
 			printf("echo reply:%s\n", string);
 			break;
-		default:
+		case TSN_ATTR_QBV:
+		case TSN_ATTR_STREAM_IDENTIFY:
+		case TSN_ATTR_QCI_SP:
+		case TSN_ATTR_QCI_SFI:
+		case TSN_ATTR_QCI_SGI:
+		case TSN_ATTR_QCI_FMI:
+		case TSN_ATTR_CBS:
+		case TSN_ATTR_QBU:
+
+			if (!tsn)
+				break;
+
+			if (!linkdata->len1)
+				break;
+
 			na1 = nla_data(na);
 			len1 = 0;
 			int temp = 0;
 
-			printf("na->len: %04x type: %04x data:\n", na->nla_len, na->nla_type);
-#if 0
-			printf("na1->len: %04x type: %04x  data: %08x\n",
-					na1->nla_len, na1->nla_type, *(uint32_t *)nla_data(na));
+			printf("tsn: len: %04x type: %04x data:\n", na->nla_len, na->nla_type);
+
 			while (len1 < na->nla_len) {
-				printf("%02x ", *((char *)na + len1));
-				len1++;
-			}
-			printf("\n");
-#else
-				while (len1 < na->nla_len) {
-					switch (na1->nla_len) {
-					case 4:
-						printf("  TYPE: %d LENGTH: %d\n", na1->nla_type, na1->nla_len);
-						break;
-					case 5:
-						printf("  TYPE: %d LENGTH: %d VALUE: %02x\n",
-								na1->nla_type, na1->nla_len, *(uint8_t *)NLA_DATA(na1));
-						break;
-					case 6:
-						printf("  TYPE: %d LENGTH: %d VALUE: %x\n",
-								na1->nla_type, na1->nla_len, *(uint16_t *)NLA_DATA(na1));
-						break;
-					case 8:
-						printf("  TYPE: %d LENGTH: %d VALUE: %x\n",
-								na1->nla_type, na1->nla_len, *(uint32_t *)NLA_DATA(na1));
-						break;
-					case 12:
-						printf("  TYPE: %d LENGTH: %d VALUE: %llx\n",
-								na1->nla_type, na1->nla_len, *(uint64_t *)NLA_DATA(na1));
-						break;
-					case 52:/* qci counter */
-						printf("  TYPE: %d LENGTH: %d VALUE: %llx %llx %llx %llx %llx %llx\n",
-								na1->nla_type, na1->nla_len, *(uint64_t *)NLA_DATA(na1),
-								*((uint64_t *)NLA_DATA(na1) + 1),
-								*((uint64_t *)NLA_DATA(na1) + 2),
-								*((uint64_t *)NLA_DATA(na1) + 3),
-								*((uint64_t *)NLA_DATA(na1) + 4),
-								*((uint64_t *)NLA_DATA(na1) + 5));
-						break;
-					default:
-						/* treated as nested data */
-						printf("nla->_len: %d type: %d\n", na1->nla_len, na1->nla_type);
-						len1 += sizeof(struct nlattr);
-						na1 = nla_data(na1);
-						continue;
+				switch (linkdata->link1[na1->nla_type].type) {
+				case NLA_NESTED:
+					{
+					struct nlattr *na2;
+					int len2 = 0;
+					int temp2 = 0;
+					printf("  level2: nla->_len: %d type: %d\n\n", na1->nla_len, na1->nla_type);
+					len1 += sizeof(struct nlattr);
+					na2 = nla_data(na1);
+
+					while(len2 < na1->nla_len) {
+						switch(linkdata->link2[na2->nla_type].type) {
+						case NLA_NESTED:
+							{
+							struct nlattr *na3;
+							int len3 = 0;
+							int temp3 = 0;
+
+							printf("   level3: nla->_len: %d type: %d\n\n", na2->nla_len, na2->nla_type);
+							len2 += sizeof(struct nlattr);
+							na3 = nla_data(na2);
+							while (len3 < na2->nla_len) {
+								switch(linkdata->link3[na3->nla_type].type) {
+								case NLA_FLAG:
+									printf("     %s \n", linkdata->link3[na3->nla_type].name);
+									break;
+								case NLA_U8:
+									printf("     %s = %02x\n", linkdata->link3[na3->nla_type].name, *(uint8_t *)NLA_DATA(na3));
+									break;
+								case NLA_U16:
+									printf("     %s = %x\n", linkdata->link3[na3->nla_type].name, *(uint16_t *)NLA_DATA(na3));
+									break;
+								case NLA_U32:
+									printf("     %s = %x\n", linkdata->link3[na3->nla_type].name, *(uint32_t *)NLA_DATA(na3));
+									break;
+								case NLA_U64:
+									printf("     %s = %llx\n", linkdata->link3[na3->nla_type].name, *(uint64_t *)NLA_DATA(na3));
+									break;
+								default:
+									break;
+								}
+								len3 += NLA_ALIGN(na3->nla_len);
+								na3 = nla_next(na3, &remain);
+							}
+							}
+							break;
+
+						case NLA_FLAG:
+							printf("   %s \n", linkdata->link2[na2->nla_type].name);
+							break;
+						case NLA_U8:
+							printf("   %s = %02x\n", linkdata->link2[na2->nla_type].name, *(uint8_t *)NLA_DATA(na2));
+							break;
+						case NLA_U16:
+							printf("   %s = %x\n", linkdata->link2[na2->nla_type].name, *(uint16_t *)NLA_DATA(na2));
+							break;
+						case NLA_U32:
+							printf("   %s = %x\n", linkdata->link2[na2->nla_type].name, *(uint32_t *)NLA_DATA(na2));
+							break;
+						case NLA_U64:
+							printf("   %s = %llx\n", linkdata->link2[na2->nla_type].name, *(uint64_t *)NLA_DATA(na2));
+							break;
+						default:
+							break;
+						}
+
+						len2 += NLA_ALIGN(na2->nla_len);
+						na2 = nla_next(na2, &remain);
 					}
-					len1 += NLA_ALIGN(na1->nla_len);
-					na1 = nla_next(na1, &remain);
-					if (temp++ > 100)
-						break;
+					}
+					break;
+				case NLA_FLAG:
+					printf("   %s \n", linkdata->link1[na1->nla_type].name);
+					break;
+				case NLA_U8:
+					printf("   %s = %02x\n", linkdata->link1[na1->nla_type].name, *(uint8_t *)NLA_DATA(na1));
+					break;
+				case NLA_U16:
+					printf("   %s = %x\n", linkdata->link1[na1->nla_type].name, *(uint16_t *)NLA_DATA(na1));
+					break;
+				case NLA_U32:
+					printf("   %s = %x\n", linkdata->link1[na1->nla_type].name, *(uint32_t *)NLA_DATA(na1));
+					break;
+				case NLA_U64:
+					printf("   %s = %llx\n", linkdata->link1[na1->nla_type].name, *(uint64_t *)NLA_DATA(na1));
+					break;
+				default:
+					break;
 				}
-#endif
+
+				len1 += NLA_ALIGN(na1->nla_len);
+				na1 = nla_next(na1, &remain);
+				if (temp++ > 100)
+					break;
+			}
+			break;
+		default:
+			break;
 		}
+
 		len += NLA_ALIGN(na->nla_len);
 #ifdef CONFIG_LIBNL3
 		na = nla_next(na, &remain);
@@ -454,8 +523,8 @@ int tsn_echo_test(char *string, int data)
 	}
 
 	/* receive message and (only 2 message types) */
-	tsn_msg_recv_analysis();
-	tsn_msg_recv_analysis();
+	tsn_msg_recv_analysis(NULL);
+	tsn_msg_recv_analysis(NULL);
 
 	return 0;
 }

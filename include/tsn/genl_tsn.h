@@ -242,6 +242,23 @@ enum {
 };
 #endif
 
+#define MAX_NAME_LEN 32
+
+struct linkpara {
+	int type;
+	char len;
+	char name[MAX_NAME_LEN];
+};
+
+struct showtable {
+	int type;
+	int len1;
+	struct linkpara *link1;
+	int len2;
+	struct linkpara *link2;
+	int len3;
+	struct linkpara *link3;
+};
 /*
  * Generic macros for dealing with netlink sockets. Might be duplicated
  * elsewhere. It is recommended that commercial grade applications use
@@ -303,7 +320,7 @@ static inline int tsn_nla_nest_end(struct msgtemplate *msg, struct nlattr *start
 struct msgtemplate *tsn_send_cmd_prepare(__u8 genl_cmd);
 void tsn_send_cmd_append_attr(struct msgtemplate *msg, __u16 nla_type, void *nla_data, int nla_len);
 int tsn_send_to_kernel(struct msgtemplate *msg);
-void tsn_msg_recv_analysis(void);
+void tsn_msg_recv_analysis(struct showtable *linkdata);
 
 int genl_tsn_init(void);
 void genl_tsn_close(void);
