@@ -629,7 +629,7 @@ int fill_qci_sgi_status_get(char *portname, int32_t sgi_handle)
 	if (ret < 0)
 		goto err;
 
-	ret = tsn_qci_psfp_sgi_status_get(portname, sgi_handle, &sgistatus);
+//	ret = tsn_qci_psfp_sgi_status_get(portname, sgi_handle, &sgistatus);
 err:
 	free(gcladmin);
 	free(gcloper);

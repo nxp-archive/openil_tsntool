@@ -428,16 +428,42 @@ void tsn_msg_recv_analysis(struct showtable *linkdata)
 					printf("   %s \n", linkdata->link1[na1->nla_type].name);
 					break;
 				case NLA_U8:
-					printf("   %s = %02x\n", linkdata->link1[na1->nla_type].name, *(uint8_t *)NLA_DATA(na1));
+					if (linkdata->link1[na1->nla_type].len == 3)
+						printf("   %s = %02x\n", linkdata->link1[na1->nla_type].name, *(char *)NLA_DATA(na1));
+					else
+						printf("   %s = %02x\n", linkdata->link1[na1->nla_type].name, *(uint8_t *)NLA_DATA(na1));
 					break;
 				case NLA_U16:
 					printf("   %s = %x\n", linkdata->link1[na1->nla_type].name, *(uint16_t *)NLA_DATA(na1));
 					break;
 				case NLA_U32:
-					printf("   %s = %x\n", linkdata->link1[na1->nla_type].name, *(uint32_t *)NLA_DATA(na1));
+					if (linkdata->link1[na1->nla_type].len == 3)
+						printf("   %s = %x\n", linkdata->link1[na1->nla_type].name, *(int32_t *)NLA_DATA(na1));
+					else
+						printf("   %s = %x\n", linkdata->link1[na1->nla_type].name, *(uint32_t *)NLA_DATA(na1));
 					break;
 				case NLA_U64:
-					printf("   %s = %llx\n", linkdata->link1[na1->nla_type].name, *(uint64_t *)NLA_DATA(na1));
+					if (linkdata->link1[na1->nla_type].len == 4)
+						printf("   %s = %012llx\n", linkdata->link1[na1->nla_type].name, *(uint64_t *)NLA_DATA(na1));
+					else
+						printf("   %s = %llx\n", linkdata->link1[na1->nla_type].name, *(uint64_t *)NLA_DATA(na1));
+					break;
+				case __NLA_TYPE_MAX + 10:
+					{
+					int j;
+					uint64_t *p;
+
+					printf("\n=================================================\n");
+					printf("   %s\n", linkdata->link1[na1->nla_type].name);
+					p = nla_data(na1);
+					for (j = 0; j < (linkdata->link1[na1->nla_type].len / 8); j++)
+						printf("   %llx", *(uint64_t *)(p + j));
+					printf("\n=================================================\n");
+					}
+					break;
+				case NLA_STRING:
+					string = (char *) NLA_DATA(na);
+					printf("netlink string:%s\n", string);
 					break;
 				default:
 					break;

@@ -242,7 +242,7 @@ enum {
 };
 #endif
 
-#define MAX_NAME_LEN 32
+#define MAX_NAME_LEN 100
 
 struct linkpara {
 	int type;
