@@ -4,6 +4,7 @@
  */
 
 #include <unistd.h>
+#include <netlink/attr.h>
 #include <netlink/genl/ctrl.h>
 #include <netlink/genl/genl.h>
 #include <netlink/netlink.h>
@@ -38,6 +39,104 @@ struct linkpara qbv_entry[TSN_QBV_ATTR_ENTRY_MAX + 1] = {
 	[TSN_QBV_ATTR_ENTRY_ID]	= {NLA_U32, 2, "entryid" },
 	[TSN_QBV_ATTR_ENTRY_GC]	= {NLA_U8, 2, "gate" },
 	[TSN_QBV_ATTR_ENTRY_TM]	= {NLA_U32, 2, "timeperiod" },
+};
+
+struct linkpara cb_streamid[TSN_STREAMID_ATTR_MAX + 1] = {
+	[TSN_STREAMID_ATTR_INDEX] 	= { NLA_U32, 2, "index"},
+	[TSN_STREAMID_ATTR_ENABLE] 	= { NLA_FLAG, 2, "enable"},
+	[TSN_STREAMID_ATTR_DISABLE]	= { NLA_FLAG, 2, "disable"},
+	[TSN_STREAMID_ATTR_STREAM_HANDLE]	= { NLA_U32, 3, "streamhandle"},
+	[TSN_STREAMID_ATTR_IFOP]	= { NLA_U32, 2, "in face out port"},
+	[TSN_STREAMID_ATTR_OFOP]	= { NLA_U32, 2, "out face out port"},
+	[TSN_STREAMID_ATTR_IFIP]	= { NLA_U32, 2, "in face in port"},
+	[TSN_STREAMID_ATTR_OFIP]	= { NLA_U32, 2, "out face in port"},
+	[TSN_STREAMID_ATTR_TYPE]	= { NLA_U8, 2, "identify type"},
+	[TSN_STREAMID_ATTR_NDMAC]	= { NLA_U64, 4, "null dmac"},
+	[TSN_STREAMID_ATTR_NTAGGED]	= { NLA_U8, 2, "null tag type"},
+	[TSN_STREAMID_ATTR_NVID]		= { NLA_U16, 2, "null vlanid"},
+	[TSN_STREAMID_ATTR_SMAC]	= { NLA_U64, 4, "source mac"},
+	[TSN_STREAMID_ATTR_STAGGED]	= { NLA_U8, 2, "source tag type"},
+	[TSN_STREAMID_ATTR_SVID]		= { NLA_U16, 2, "source vlanid"},
+	[TSN_STREAMID_ATTR_COUNTERS_PSI] = { NLA_U64, 2, "counter per-steram-in"},
+	[TSN_STREAMID_ATTR_COUNTERS_PSO] = { NLA_U64, 2, "counter per-stream-out"},
+	[TSN_STREAMID_ATTR_COUNTERS_PSPPI] = { NLA_U64, 2, "counter per-stream-per-port-in"},
+	[TSN_STREAMID_ATTR_COUNTERS_PSPPO] = { NLA_U64, 2, "counter per-stream-per-port-out"},
+};
+
+struct linkpara qci_sfi[TSN_QCI_SFI_ATTR_MAX + 1] = {
+	[TSN_QCI_SFI_ATTR_INDEX]		= { NLA_U32, 2, "index"},
+	[TSN_QCI_SFI_ATTR_ENABLE]		= { NLA_FLAG, 2, "enable"},
+	[TSN_QCI_SFI_ATTR_DISABLE]		= { NLA_FLAG, 2, "disable"},
+	[TSN_QCI_SFI_ATTR_STREAM_HANDLE] = { NLA_U32, 3, "streamhandle"},
+	[TSN_QCI_SFI_ATTR_PRIO_SPEC] 	= { NLA_U8, 3, "priority"},
+	[TSN_QCI_SFI_ATTR_GATE_ID]		= { NLA_U32, 2, "gateid"},
+	[TSN_QCI_SFI_ATTR_FILTER_TYPE]	= { NLA_U8, 2, "filtertype"},
+	[TSN_QCI_SFI_ATTR_FLOW_ID]		= { NLA_U32, 3, "flowid"},
+	[TSN_QCI_SFI_ATTR_MAXSDU]		= { NLA_U16, 2, "maxsdu"},
+	[TSN_QCI_SFI_ATTR_COUNTERS]		= { __NLA_TYPE_MAX + 10, sizeof(struct tsn_qci_psfp_sfi_counters), "\nmatch   pass   gate_drop   sdu_pass   sdu_drop   red\n"},
+	[TSN_QCI_SFI_ATTR_OVERSIZE_ENABLE]	= { NLA_FLAG, 2, "oversize enable"},
+	[TSN_QCI_SFI_ATTR_OVERSIZE]		= { NLA_FLAG, 2, "oversize"},
+};
+
+#if 0
+static const struct nla_policy qci_sfi_counters_policy[TSN_QCI_SFI_ATTR_COUNT_MAX + 1] = {
+	[TSN_QCI_SFI_ATTR_MATCH]		= { NLA_U64},
+	[TSN_QCI_SFI_ATTR_PASS]			= { NLA_U64},
+	[TSN_QCI_SFI_ATTR_DROP]			= { NLA_U64},
+	[TSN_QCI_SFI_ATTR_SDU_DROP]		= { NLA_U64},
+	[TSN_QCI_SFI_ATTR_SDU_PASS]		= { NLA_U64},
+	[TSN_QCI_SFI_ATTR_RED]			= { NLA_U64},
+};
+#endif
+
+struct linkpara qci_sgi[TSN_QCI_SGI_ATTR_MAX + 1] = {
+	[TSN_QCI_SGI_ATTR_INDEX]		= { NLA_U32, 2, "index"},
+	[TSN_QCI_SGI_ATTR_ENABLE]		= { NLA_FLAG, 2, "enable"},
+	[TSN_QCI_SGI_ATTR_DISABLE]		= { NLA_FLAG, 2, "disable"},
+	[TSN_QCI_SGI_ATTR_CONFCHANGE]	= { NLA_FLAG, 2, "configchange"},
+	[TSN_QCI_SGI_ATTR_IRXEN]		= { NLA_FLAG, 2, "invalid rx enable"},		/* Invalid rx enable*/
+	[TSN_QCI_SGI_ATTR_IRX]			= { NLA_FLAG, 2, "invalid rx"},
+	[TSN_QCI_SGI_ATTR_OEXEN]		= { NLA_FLAG, 2, "octet exceed enable"},		/* Octet exceed enable */
+	[TSN_QCI_SGI_ATTR_OEX]			= { NLA_FLAG, 2, "octet exceed"},
+	[TSN_QCI_SGI_ATTR_ADMINENTRY]	= { NLA_NESTED, 1, "admin entry"},
+	[TSN_QCI_SGI_ATTR_OPERENTRY]	= { NLA_NESTED, 1, "oper entry"},
+	[TSN_QCI_SGI_ATTR_CCTIME]		= { NLA_U64, 2, "configchange time"},	/* config change time */
+	[TSN_QCI_SGI_ATTR_TICKG]		= { NLA_U32, 2, "tick"},
+	[TSN_QCI_SGI_ATTR_CUTIME]		= { NLA_U64, 2, "currenttime"},
+	[TSN_QCI_SGI_ATTR_CPENDING]		= { NLA_FLAG, 2, "config pending"},
+	[TSN_QCI_SGI_ATTR_CCERROR]		= { NLA_U64, 2, "configchange error"},
+};
+
+struct linkpara qci_sgi_ctrl[TSN_SGI_ATTR_CTRL_MAX + 1] = {
+	[TSN_SGI_ATTR_CTRL_INITSTATE]	= { NLA_FLAG, 2, "initial state"},
+	[TSN_SGI_ATTR_CTRL_LEN]			= { NLA_U8, 2, "length"},
+	[TSN_SGI_ATTR_CTRL_CYTIME]		= { NLA_U32, 2, "cycle time"},
+	[TSN_SGI_ATTR_CTRL_CYTIMEEX]	= { NLA_U32, 2, "cycle time extend"},
+	[TSN_SGI_ATTR_CTRL_BTIME]		= { NLA_U64, 2, "basetime"},
+	[TSN_SGI_ATTR_CTRL_INITIPV]		= { NLA_U8, 3, "initial ipv"},
+	[TSN_SGI_ATTR_CTRL_GCLENTRY]	= { NLA_NESTED, 1, "gatelist"},
+};
+
+struct linkpara qci_sgi_gcl[TSN_SGI_ATTR_GCL_MAX + 1] = {
+	[TSN_SGI_ATTR_GCL_GATESTATE]	= { NLA_FLAG, 2, "gate state"},
+	[TSN_SGI_ATTR_GCL_IPV]			= { NLA_U8, 3, "ipv"},
+	[TSN_SGI_ATTR_GCL_INTERVAL]		= { NLA_U32, 2, "time interval"},
+	[TSN_SGI_ATTR_GCL_OCTMAX]		= { NLA_U32, 2, "octmax"},
+};
+
+struct linkpara qci_fmi[TSN_QCI_FMI_ATTR_MAX + 1] = {
+	[TSN_QCI_FMI_ATTR_INDEX]	= { NLA_U32, 2, "index"},
+	[TSN_QCI_FMI_ATTR_ENABLE]	= { NLA_FLAG, 2, "enable"},
+	[TSN_QCI_FMI_ATTR_DISABLE]	= { NLA_FLAG, 2, "disable"},
+	[TSN_QCI_FMI_ATTR_CIR]		= { NLA_U32, 2, "cir"},
+	[TSN_QCI_FMI_ATTR_CBS]		= { NLA_U32, 2, "cbs"},
+	[TSN_QCI_FMI_ATTR_EIR]		= { NLA_U32, 2, "eir"},
+	[TSN_QCI_FMI_ATTR_EBS]		= { NLA_U32, 2, "ebs"},
+	[TSN_QCI_FMI_ATTR_CF]		= { NLA_FLAG, 2, "couple flag"},
+	[TSN_QCI_FMI_ATTR_CM]		= { NLA_FLAG, 2, "color mode"},
+	[TSN_QCI_FMI_ATTR_DROPYL]	= { NLA_FLAG, 2, "drop yellow"},
+	[TSN_QCI_FMI_ATTR_MAREDEN]	= { NLA_FLAG, 2, "mark red enable"},
+	[TSN_QCI_FMI_ATTR_MARED]	= { NLA_FLAG, 2, "mark red"},
 };
 
 int tsn_qci_streampara_get(struct tsn_qci_psfp_stream_param *sp)
@@ -165,6 +264,7 @@ int tsn_cb_streamid_get(char *portname, uint32_t sid_index, struct tsn_cb_stream
 	struct msgtemplate *msg;
 	struct nlattr *sidattr;
 	int ret;
+	struct showtable streamidget;
 
 	if (portname == NULL)
 		return -1;
@@ -197,8 +297,12 @@ int tsn_cb_streamid_get(char *portname, uint32_t sid_index, struct tsn_cb_stream
 	}
 
 	/* TODO : fill the sid */
-
-	tsn_msg_recv_analysis(NULL);
+	streamidget.type = TSN_ATTR_STREAM_IDENTIFY;
+	streamidget.len1 = TSN_STREAMID_ATTR_MAX;
+	streamidget.link1 = &cb_streamid;
+	streamidget.len2 = 0;
+	streamidget.len3 = 0;
+	tsn_msg_recv_analysis(&streamidget);
 
 	return 0;
 
@@ -321,6 +425,7 @@ int tsn_qci_psfp_sfi_get(char *portname, uint32_t sfi_handle,
 	struct msgtemplate *msg;
 	struct nlattr *qcisfi;
 	int ret;
+	struct showtable sfiget;
 
 	if (portname == NULL)
 		return -1;
@@ -348,7 +453,12 @@ int tsn_qci_psfp_sfi_get(char *portname, uint32_t sfi_handle,
 	}
 
 	/* TODO: receive the feedback and return */
-	tsn_msg_recv_analysis(NULL);
+	sfiget.type = TSN_ATTR_QCI_SFI;
+	sfiget.len1 = TSN_QCI_SFI_ATTR_MAX;
+	sfiget.link1 = &qci_sfi;
+	sfiget.len2 = 0;
+	sfiget.len3 = 0;
+	tsn_msg_recv_analysis(&sfiget);
 
 	return 0;
 
@@ -550,6 +660,7 @@ int tsn_qci_psfp_sgi_get(char *portname, uint32_t sgi_handle, struct tsn_qci_psf
 	struct msgtemplate *msg;
 	struct nlattr *sgiattr;
 	int ret;
+	struct showtable sgiget;
 
 	if (portname == NULL)
 		return -1;
@@ -577,7 +688,14 @@ int tsn_qci_psfp_sgi_get(char *portname, uint32_t sgi_handle, struct tsn_qci_psf
 	}
 
 	/* TODO: receive the feedback and return */
-	tsn_msg_recv_analysis(NULL);
+	sgiget.type = TSN_ATTR_QCI_SGI;
+	sgiget.len1 = TSN_QCI_SGI_ATTR_MAX;
+	sgiget.link1 = &qci_sgi;
+	sgiget.len2 = TSN_SGI_ATTR_CTRL_MAX;
+	sgiget.link2 = &qci_sgi_ctrl;
+	sgiget.len3 = TSN_SGI_ATTR_GCL_MAX;
+	sgiget.link3 = qci_sgi_gcl;
+	tsn_msg_recv_analysis(&sgiget);
 
 	return 0;
 
@@ -591,6 +709,7 @@ int tsn_qci_psfp_sgi_status_get(char *portname, uint32_t sgi_handle, struct tsn_
 	struct msgtemplate *msg;
 	struct nlattr *sgiattr;
 	int ret;
+	struct showtable sgiget;
 
 	if (portname == NULL)
 		return -1;
@@ -618,7 +737,14 @@ int tsn_qci_psfp_sgi_status_get(char *portname, uint32_t sgi_handle, struct tsn_
 	}
 
 	/* TODO: receive the feedback and return */
-	tsn_msg_recv_analysis(NULL);
+	sgiget.type = TSN_ATTR_QCI_SGI;
+	sgiget.len1 = TSN_QCI_SGI_ATTR_MAX;
+	sgiget.link1 = &qci_sgi;
+	sgiget.len2 = TSN_SGI_ATTR_CTRL_MAX;
+	sgiget.link2 = &qci_sgi_ctrl;
+	sgiget.len3 = TSN_SGI_ATTR_GCL_MAX;
+	sgiget.link3 = qci_sgi_gcl;
+	tsn_msg_recv_analysis(&sgiget);
 
 	return 0;
 
@@ -704,6 +830,7 @@ int tsn_qci_psfp_fmi_get(char *portname, uint32_t fmi_id, struct tsn_qci_psfp_fm
 	struct msgtemplate *msg;
 	struct nlattr *qcifmi;
 	int ret;
+	struct showtable linkfmi;
 
 	if (fmiconf == NULL)
 		return -1;
@@ -733,7 +860,10 @@ int tsn_qci_psfp_fmi_get(char *portname, uint32_t fmi_id, struct tsn_qci_psfp_fm
 		return -1;
 	}
 
-	tsn_msg_recv_analysis(NULL);
+	linkfmi.type = TSN_ATTR_QCI_FMI; 
+	linkfmi.len1 = TSN_QCI_FMI_ATTR_MAX;
+	linkfmi.link1 = &qci_fmi;
+	tsn_msg_recv_analysis(&linkfmi);
 
 	return 0;
 
