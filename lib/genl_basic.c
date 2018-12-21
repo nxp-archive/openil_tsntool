@@ -449,16 +449,17 @@ void tsn_msg_recv_analysis(struct showtable *linkdata)
 						printf("   %s = %llx\n", linkdata->link1[na1->nla_type].name, *(uint64_t *)NLA_DATA(na1));
 					break;
 				case __NLA_TYPE_MAX + 10:
+				case __NLA_TYPE_MAX + 11:
 					{
 					int j;
 					uint64_t *p;
 
-					printf("\n=================================================\n");
+					printf("\n=======================================================================================\n");
 					printf("   %s\n", linkdata->link1[na1->nla_type].name);
 					p = nla_data(na1);
 					for (j = 0; j < (linkdata->link1[na1->nla_type].len / 8); j++)
 						printf("   %llx", *(uint64_t *)(p + j));
-					printf("\n=================================================\n");
+					printf("\n======================================================================================\n");
 					}
 					break;
 				case NLA_STRING:
