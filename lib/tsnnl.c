@@ -137,6 +137,7 @@ struct linkpara qci_fmi[TSN_QCI_FMI_ATTR_MAX + 1] = {
 	[TSN_QCI_FMI_ATTR_DROPYL]	= { NLA_FLAG, 2, "drop yellow"},
 	[TSN_QCI_FMI_ATTR_MAREDEN]	= { NLA_FLAG, 2, "mark red enable"},
 	[TSN_QCI_FMI_ATTR_MARED]	= { NLA_FLAG, 2, "mark red"},
+	[TSN_QCI_FMI_ATTR_COUNTERS] = { __NLA_TYPE_MAX + 11, sizeof(struct tsn_qci_psfp_fmi_counters), "\nbytecount   drop   dr0_green   dr1_green   dr2_yellow   remark_yellow   dr3_red   remark_red\n"},
 };
 
 int tsn_qci_streampara_get(struct tsn_qci_psfp_stream_param *sp)
