@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: (GPL-2.0 OR MIT)
 /*
- * Copyright 2018 NXP
+ * Copyright 2018-2019 NXP
  */
 
 #include <assert.h>
@@ -196,6 +196,7 @@ int main(int argc, char *argv[])
 	int c;
 	int raw = 0;
 	int ret = 0;
+	int run = 0;
 	sigset_t block_mask;
 
 	/* signal handling */
@@ -210,7 +211,7 @@ int main(int argc, char *argv[])
 
 	for (;;) {
 		c = getopt(argc, argv, "hrv");
-		if (c < 0)
+		if (c < 0 || run)
 			break;
 		switch (c) {
 		case 'h':
@@ -227,8 +228,8 @@ int main(int argc, char *argv[])
 			raw = SHOW_RAW;
 			break;
 		default:
-			usage();
-			return -1;
+			run = 1;
+			break;
 		}
 	}
 
@@ -249,7 +250,7 @@ int main(int argc, char *argv[])
 
 		cli_interactive();
 	} else
-		ret = request(argc - optind, &argv[optind]);
+		ret = request(argc - 1, &argv[1]);
 
 	genl_tsn_close();
 	return 0;
