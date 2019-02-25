@@ -26,7 +26,7 @@
 #define SHOW_RAW_ONLY  0x04
 #define PROMPT			"tsntool> "
 
-int VERBOSE_CONDITION = 1;
+int VERBOSE_CONDITION = 0;
 
 extern struct cli_cmd cli_commands[];
 
