@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: (GPL-2.0 OR MIT)
 /*
- * Copyright 2018 NXP
+ * Copyright 2018-2019 NXP
  */
 
 #ifndef __TSN_GENETLINK_H
@@ -23,6 +23,28 @@ typedef enum boolean {
 #define ptptime_t uint64_t
 
 #include <linux/tsn.h>
+
+extern int VERBOSE;
+
+#define _llog(file, fmt, ...) do { \
+	if (VERBOSE) { \
+		fprintf(file, "%s@%d: " fmt "\n", \
+		__func__, __LINE__, ##__VA_ARGS__); \
+	} else { \
+		fprintf(file, fmt "\n", ##__VA_ARGS__); \
+	} \
+} while (0)
+
+#define llogc(file, condition, ...) do { \
+	if (condition) { \
+		_llog(file, __VA_ARGS__); \
+	} \
+} while (0)
+
+#define lloge(...) _llog(stderr, __VA_ARGS__)
+#define llogi(...) _llog(stdout, __VA_ARGS__)
+#define llogv(...) llogc(stdout, VERBOSE, __VA_ARGS__)
+
 #if 0
 #define	TSN_GENL_NAME		"TSN_GEN_CTRL"
 #define	TSN_GENL_VERSION	0x1

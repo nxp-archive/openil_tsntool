@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: (GPL-2.0 OR MIT)
 /*
- * Copyright 2018 NXP
+ * Copyright 2018-2019 NXP
  */
 
 #include <stdio.h>
@@ -20,6 +20,8 @@
 #include "tsn/genl_tsn.h"
 
 #define CONFIG_LIBNL3
+
+int VERBOSE = 0;
 
 struct global_conf glb_conf;
 /*
