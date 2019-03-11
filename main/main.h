@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: (GPL-2.0 OR MIT)
 /*
- * Copyright 2018 NXP
+ * Copyright 2018-2019 NXP
  */
 
 #ifndef _FELIX_MAIN_H_
@@ -12,10 +12,6 @@ void print_version(void);
 void cli_cmd_list(void);
 
 extern int VERBOSE_CONDITION;
-
-#define SWITCH_NUMBER 1
-#define SWITCH_PORTS_NUMBER 5
-#define MAX_ARG_LEN 30
 
 #define _log(file, fmt, ...) do { \
 	if (VERBOSE_CONDITION) { \
@@ -35,6 +31,11 @@ extern int VERBOSE_CONDITION;
 #define loge(...) _log(stderr, __VA_ARGS__)
 #define logi(...) _log(stdout, __VA_ARGS__)
 #define logv(...) logc(stdout, VERBOSE_CONDITION, __VA_ARGS__)
+
+#define SWITCH_NUMBER 1
+#define SWITCH_PORTS_NUMBER 5
+#define MAX_ARG_LEN 30
+
 
 #define UNUSED __attribute__((__unused__))
 char some_msg[4096];
