@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: (GPL-2.0 OR MIT)
 /*
- * Copyright 2018 NXP
+ * Copyright 2018-2019 NXP
  */
 
 #ifndef _CLI_CMD_H_
@@ -45,4 +45,5 @@ int cli_cmd_ct_set(UNUSED int argc, UNUSED char *argv[], UNUSED int cmdnumber);
 int cli_cmd_cbgen_set(UNUSED int argc, UNUSED char *argv[], UNUSED int cmdnumber);
 int cli_cmd_cbrec_set(UNUSED int argc, UNUSED char *argv[], UNUSED int cmdnumber);
 int cli_cmd_pcpmap_set(UNUSED int argc, UNUSED char *argv[], UNUSED int cmdnumber);
+int cli_cmd_dscp_set(UNUSED int argc, UNUSED char *argv[], UNUSED int cmdnumber);
 #endif
