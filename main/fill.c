@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: (GPL-2.0 OR MIT)
 /*
- * Copyright 2018 NXP
+ * Copyright 2018-2019 NXP
  */
 
 #include<stdio.h>
@@ -742,4 +742,14 @@ int fill_cbrec_set(char *portname, uint32_t index, uint8_t seq_len,
 int fill_pcpmap_set(char *portname, bool enable)
 {
 	return tsn_pcpmap_set(portname, enable);
+}
+
+int fill_dscp_set(char *portname, bool disable, int index, int cos, int dpl)
+{
+	struct tsn_qos_switch_dscp_conf dscp_conf;
+
+	memset(&dscp_conf, 0, sizeof(struct tsn_qos_switch_dscp_conf));
+	dscp_conf.cos = cos;
+	dscp_conf.dpl = dpl;
+	return tsn_dscp_set(portname, disable, index, &dscp_conf);
 }
