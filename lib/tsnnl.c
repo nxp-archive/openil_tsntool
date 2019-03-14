@@ -140,6 +140,18 @@ struct linkpara qci_fmi[TSN_QCI_FMI_ATTR_MAX + 1] = {
 	[TSN_QCI_FMI_ATTR_COUNTERS] = { __NLA_TYPE_MAX + 11, sizeof(struct tsn_qci_psfp_fmi_counters), "\nbytecount   drop   dr0_green   dr1_green   dr2_yellow   remark_yellow   dr3_red   remark_red\n"},
 };
 
+struct linkpara cb_get[TSN_CBSTAT_ATTR_MAX + 1] = {
+	[TSN_CBSTAT_ATTR_INDEX]		= { NLA_U32, 2, "index"},
+	[TSN_CBSTAT_ATTR_GEN_REC]	= { NLA_U8, 2, "gen_rec"},
+	[TSN_CBSTAT_ATTR_ERR]		= { NLA_U8, 2, "err"},
+	[TSN_CBSTAT_ATTR_SEQ_NUM]	= { NLA_U32, 3, "seq_num"},
+	[TSN_CBSTAT_ATTR_SEQ_LEN]	= { NLA_U8, 2, "seq_len"},
+	[TSN_CBSTAT_ATTR_SPLIT_MASK]	= { NLA_U8, 2, "split_mask"},
+	[TSN_CBSTAT_ATTR_PORT_MASK]	= { NLA_U8, 2, "iport_mask"},
+	[TSN_CBSTAT_ATTR_HIS_LEN]	= { NLA_U8, 2, "his_len"},
+	[TSN_CBSTAT_ATTR_SEQ_HIS]	= { NLA_U32, 3, "seq_history"},
+};
+
 int tsn_qci_streampara_get(struct tsn_qci_psfp_stream_param *sp)
 {
 	return -1;
@@ -1406,6 +1418,54 @@ int tsn_cbrec_set(char *portname, uint32_t index,
 
 	tsn_msg_recv_analysis(NULL);
 	return 0;
+}
+
+int tsn_cbstatus_get(char *portname, uint32_t index,
+		     struct tsn_cb_status *cbstat)
+{
+	struct msgtemplate *msg;
+	struct nlattr *cbattr;
+	int ret;
+	struct showtable cbstatget;
+
+	if (portname == NULL)
+		return -1;
+
+	msg = tsn_send_cmd_prepare(TSN_CMD_CBSTAT_GET);
+	if (msg == NULL) {
+		loge("fail to allocate genl msg.\n");
+		return -1;
+	}
+
+	tsn_send_cmd_append_attr(msg, TSN_ATTR_IFNAME, portname, strlen(portname) + 1);
+
+	cbattr = tsn_nla_nest_start(msg, TSN_ATTR_CBSTAT);
+	if (!cbattr)
+		goto err;
+
+	tsn_send_cmd_append_attr(msg, TSN_CBSTAT_ATTR_INDEX, &index, sizeof(index));
+
+	tsn_nla_nest_end(msg, cbattr);
+
+	ret = tsn_send_to_kernel(msg);
+	if (ret < 0) {
+		loge("genl send to kernel error\n");
+		return -1;
+	}
+
+	/* TODO: receive the feedback and return */
+	cbstatget.type = TSN_ATTR_CBSTAT;
+	cbstatget.len1 = TSN_CBSTAT_ATTR_MAX;
+	cbstatget.link1 = &cb_get;
+	cbstatget.len2 = 0;
+	cbstatget.len3 = 0;
+	tsn_msg_recv_analysis(&cbstatget);
+
+	return 0;
+
+err:
+	free(msg);
+	return -1;
 }
 
 int tsn_pcpmap_set(char *portname, bool enable)
