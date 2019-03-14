@@ -288,7 +288,13 @@ struct cli_cmd cli_commands[] = {
 			{"rtag_pop_en", 0, 0, 'r'},
 		}
 	},
-
+	{ "cbget", cli_cmd_cbstatus_get, "get 802.1CB config status",
+		{
+			{"help", 0, 0, 'h'},
+			{"device", 1, 0, 'd'},
+			{"index", 1, 0, 'i'},
+		}
+	},
 	{ "pcpmap", cli_cmd_pcpmap_set, "set queues map to PCP tag",
 		{
 			{"help", 0, 0, 'h'},
@@ -2141,7 +2147,6 @@ int cli_cmd_cbgen_set(UNUSED int argc, UNUSED char *argv[], UNUSED int cmdnumber
 	int ret;
 	int device = 0;
 	uint32_t index = 0;
-	uint8_t queue_stat = 0;
 	uint8_t iport_mask = 0;
 	uint8_t split_mask = 0;
 	uint8_t seq_len = 0;
@@ -2283,6 +2288,56 @@ int cli_cmd_cbrec_set(UNUSED int argc, UNUSED char *argv[], UNUSED int cmdnumber
 	return 0;
 }
 
+void cmd_cbget_help(void)
+{
+	printf("802.1cb status get\n \
+			--device <ifname>\n \
+			--index <value>\n \
+			--help\n\n");
+}
+
+int cli_cmd_cbstatus_get(UNUSED int argc, UNUSED char *argv[], UNUSED int cmdnumber)
+{
+	int c, index, ret;
+	int device = 0;
+	struct option *long_options = &cli_commands[cmdnumber].long_options[0];
+	int option_index = 0;
+	char portname[IF_NAMESIZE];
+
+	optind = 0;
+
+	while ((c = getopt_long(argc, argv, "d:i:h", long_options, &option_index)) != -1) {
+		switch (c) {
+		case 'd':
+			strcpy(portname, optarg);
+			logv("device is %s\n", portname);
+			device = 1;
+			break;
+		case 'i':
+			ret = is_hex_oct(optarg);
+			if (ret < 0)
+				return -1;
+			index = strtoul(optarg, NULL, ret);
+			break;
+		case 'h':
+			cmd_cbget_help();
+			return 0;
+		default:
+			cmd_cbget_help();
+			return -1;
+		}
+	}
+
+	if (!device) {
+		/* Get all the devices with qbv capability */
+		loge("No --device not supported\n");
+	} else {
+		fill_cbstatus_get(portname, index);
+	}
+
+	return 0;
+}
+
 void cmd_pcpmap_help(void)
 {
 	printf("Mapping PCP tags to queue number\n \
@@ -2294,7 +2349,6 @@ void cmd_pcpmap_help(void)
 int cli_cmd_pcpmap_set(UNUSED int argc, UNUSED char *argv[], UNUSED int cmdnumber)
 {
 	int c;
-	int ret;
 	int device = 0;
 	bool enable = 0;
 	struct option *long_options = &cli_commands[cmdnumber].long_options[0];

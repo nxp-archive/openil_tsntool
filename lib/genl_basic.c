@@ -341,6 +341,7 @@ void tsn_msg_recv_analysis(struct showtable *linkdata)
 		case TSN_ATTR_QCI_FMI:
 		case TSN_ATTR_CBS:
 		case TSN_ATTR_QBU:
+		case TSN_ATTR_CBSTAT:
 
 			if (!tsn)
 				break;

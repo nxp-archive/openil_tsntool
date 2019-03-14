@@ -739,6 +739,21 @@ int fill_cbrec_set(char *portname, uint32_t index, uint8_t seq_len,
 	return tsn_cbrec_set(portname, index, &sr);
 }
 
+int fill_cbstatus_get(char *portname, int32_t index)
+{
+	struct tsn_cb_status cbstat;
+	int ret = 0;
+
+	memset(&cbstat, 0, sizeof(struct tsn_cb_status));
+
+	if (portname == NULL)
+		printf("No device\n");
+	else
+		ret = tsn_cbstatus_get(portname, index, &cbstat);
+
+	return ret;
+}
+
 int fill_pcpmap_set(char *portname, bool enable)
 {
 	return tsn_pcpmap_set(portname, enable);

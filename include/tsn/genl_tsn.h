@@ -375,6 +375,8 @@ int tsn_qbu_get_status(char *portname, struct tsn_preempt_status *pts);
 int tsn_ct_set(char *portname, uint8_t pt_vector);
 int tsn_cbgen_set(char *portname, uint32_t index, struct tsn_seq_gen_conf *sg);
 int tsn_cbrec_set(char *portname, uint32_t index, struct tsn_seq_rec_conf *sr);
+int tsn_cbstatus_get(char *portname, uint32_t index,
+		     struct tsn_cb_status *cbstat);
 int tsn_pcpmap_set(char *portname, bool enable);
 int tsn_dscp_set(char *portname, bool disable, int index,
 		 struct tsn_qos_switch_dscp_conf *dscp_conf);
