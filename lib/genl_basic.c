@@ -16,7 +16,7 @@
 #include <sys/types.h>
 #include <signal.h>
 #include <malloc.h>
-
+#include <cjson/cJSON.h>
 #include "tsn/genl_tsn.h"
 
 #define CONFIG_LIBNL3
