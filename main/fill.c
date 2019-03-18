@@ -88,45 +88,6 @@ int get_all_ifname(char *ifnames)
 	return count;
 }
 
-/* Judge the portname is switch or not
- * char *portname: the input --device <ifname>
- * return :
- *	0 : not a switch
- *	>0 : yes, it is a switch, return switch port number, from 1 to MAXPORTS.
- */
-uint8_t is_switch(char *portname)
-{
-	int i = 0;
-	uint8_t p;
-
-	if ((portname[0] != 's') || (portname[1] != 'w') || (portname[3] != 'p')) {
-		logv("%s is not a switch\n", portname);
-		return 0;
-	}
-
-	if ((portname[2] > ('0' + SWITCH_NUMBER)) || (portname[2] < '1')) {
-		logv("%s : switch number is out of range\n", portname);
-		return 0;
-	}
-
-	while (portname[4 + i]) {
-		if (isdigit(portname[4 + i])) {
-			i++;
-			continue;
-		}
-		logv("%s: device name is not valid digital port number\n", portname);
-		return 0;
-	}
-
-	p = atoi(portname + 4);
-	if (!p || (p > SWITCH_PORTS_NUMBER)) {
-		logv("%s: port number %d is out of range 1 to %d\n", portname, atoi(portname+4), SWITCH_PORTS_NUMBER);
-		return 0;
-	}
-
-	return(p);
-}
-
 int qbv_str2gate(char *state)
 {
 	int i;
@@ -227,8 +188,6 @@ int fill_qbv_set(char *portname, char *config, bool enable, uint8_t configchange
 		uint64_t basetime, uint32_t cycletime,
 		uint32_t cycletimeext, uint32_t maxsdu, uint8_t initgate)
 {
-	int dev_type;
-	int sw_number;
 	uint32_t count = 0;
 	struct tsn_qbv_entry *conf = NULL;
 	struct tsn_qbv_conf adminconf;
@@ -257,19 +216,7 @@ int fill_qbv_set(char *portname, char *config, bool enable, uint8_t configchange
 	adminconf.config_change = configchange;
 	adminconf.maxsdu = maxsdu;
 
-	sw_number = is_switch(portname);
-	if (sw_number) {
-		logv("switch port number is %d\n", sw_number);
-		dev_type = OPT_TYPE_SWITCH;
-	} else {
-		dev_type = OPT_TYPE_TSN;
-	}
-/*
-	if ((dev_type == OPT_TYPE_TSN) && validate_ifname(portname)) {
-		loge("device name is not valid.\n");
-		return -1;
-	}
-*/
+
 	/* malloc space for filling the entry variable */
 	conf = (struct tsn_qbv_entry *)malloc(MAX_ENTRY_SIZE);
 	if (conf == NULL) {
@@ -303,8 +250,6 @@ qbvset:
 
 int fill_qbv_get(char *portname)
 {
-	int dev_type;
-	int sw_number;
 	//uint32_t count = 0;
 	struct tsn_qbv_entry *conf, *status;
 	struct tsn_qbv_conf qbvconf;
@@ -336,19 +281,6 @@ int fill_qbv_get(char *portname)
 
 	//count = MAX_ENTRY_SIZE / sizeof(struct tsn_qbv_entry);
 
-	sw_number = is_switch(portname);
-	if (sw_number) {
-		logv("switch port number is %d\n", sw_number);
-		dev_type = OPT_TYPE_SWITCH;
-	} else {
-		dev_type = OPT_TYPE_TSN;
-	}
-/*
-	if ((dev_type == OPT_TYPE_TSN) && validate_ifname(portname)) {
-		loge("device name is not valid.\n");
-		goto err;
-	}
-*/
 #if 0
 	ret = tsn_qos_port_qbv_get(portname, &qbvconf);
 	if (ret < 0) {
