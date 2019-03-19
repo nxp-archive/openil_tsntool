@@ -15,8 +15,8 @@ struct linkpara qbv_base[TSN_QBV_ATTR_MAX + 1] = {
 	[TSN_QBV_ATTR_CONFIGCHANGE]			= {0,0,0},
 	[TSN_QBV_ATTR_GRANULARITY]			= {0,0,0},
 	[TSN_QBV_ATTR_CONFIGCHANGEERROR]	= {0,0,0},
-	[TSN_QBV_ATTR_ADMINENTRY]   		= { NLA_NESTED, 1, ""},
-	[TSN_QBV_ATTR_OPERENTRY] 			= { NLA_NESTED, 1, ""},
+	[TSN_QBV_ATTR_ADMINENTRY]   		= { NLA_NESTED, 1, "admin"},
+	[TSN_QBV_ATTR_OPERENTRY] 			= { NLA_NESTED, 1, "oper"},
 	[TSN_QBV_ATTR_ENABLE] 				= { NLA_FLAG, 2, "enable"},
 	[TSN_QBV_ATTR_DISABLE] 				= { NLA_FLAG, 2 , "disable"},
 	[TSN_QBV_ATTR_CONFIGCHANGETIME] 	= { NLA_U64, 2, "configchangetime"},
@@ -32,13 +32,13 @@ struct linkpara qbv_ctrl[TSN_QBV_ATTR_CTRL_MAX + 1] = {
 	[TSN_QBV_ATTR_CTRL_CYCLETIME]		= {NLA_U32, 2, "cycletime"},
 	[TSN_QBV_ATTR_CTRL_CYCLETIMEEXT]	= {NLA_U32, 2, "cycletimeext" },
 	[TSN_QBV_ATTR_CTRL_BASETIME]		= {NLA_U64, 2, "basetime" },
-	[TSN_QBV_ATTR_CTRL_LISTENTRY]		= {NLA_NESTED, 1 , ""},
+	[TSN_QBV_ATTR_CTRL_LISTENTRY]		= {NLA_NESTED + __NLA_TYPE_MAX, 1 , "list"},
 };
 
 struct linkpara qbv_entry[TSN_QBV_ATTR_ENTRY_MAX + 1] = {
-	[TSN_QBV_ATTR_ENTRY_ID]	= {NLA_U32, 2, "entryid" },
-	[TSN_QBV_ATTR_ENTRY_GC]	= {NLA_U8, 2, "gate" },
-	[TSN_QBV_ATTR_ENTRY_TM]	= {NLA_U32, 2, "timeperiod" },
+	[TSN_QBV_ATTR_ENTRY_ID]	= {NLA_U32 +  __NLA_TYPE_MAX, 2, "entryid" },
+	[TSN_QBV_ATTR_ENTRY_GC]	= {NLA_U8 + __NLA_TYPE_MAX, 2, "gate" },
+	[TSN_QBV_ATTR_ENTRY_TM]	= {NLA_U32 + __NLA_TYPE_MAX, 2, "timeperiod" },
 };
 
 struct linkpara cb_streamid[TSN_STREAMID_ATTR_MAX + 1] = {
@@ -98,8 +98,8 @@ struct linkpara qci_sgi[TSN_QCI_SGI_ATTR_MAX + 1] = {
 	[TSN_QCI_SGI_ATTR_IRX]			= { NLA_FLAG, 2, "invalid rx"},
 	[TSN_QCI_SGI_ATTR_OEXEN]		= { NLA_FLAG, 2, "octet exceed enable"},		/* Octet exceed enable */
 	[TSN_QCI_SGI_ATTR_OEX]			= { NLA_FLAG, 2, "octet exceed"},
-	[TSN_QCI_SGI_ATTR_ADMINENTRY]	= { NLA_NESTED, 1, "admin entry"},
-	[TSN_QCI_SGI_ATTR_OPERENTRY]	= { NLA_NESTED, 1, "oper entry"},
+	[TSN_QCI_SGI_ATTR_ADMINENTRY]	= { NLA_NESTED, 1, "adminentry"},
+	[TSN_QCI_SGI_ATTR_OPERENTRY]	= { NLA_NESTED, 1, "operentry"},
 	[TSN_QCI_SGI_ATTR_CCTIME]		= { NLA_U64, 2, "configchange time"},	/* config change time */
 	[TSN_QCI_SGI_ATTR_TICKG]		= { NLA_U32, 2, "tick"},
 	[TSN_QCI_SGI_ATTR_CUTIME]		= { NLA_U64, 2, "currenttime"},
@@ -114,14 +114,14 @@ struct linkpara qci_sgi_ctrl[TSN_SGI_ATTR_CTRL_MAX + 1] = {
 	[TSN_SGI_ATTR_CTRL_CYTIMEEX]	= { NLA_U32, 2, "cycle time extend"},
 	[TSN_SGI_ATTR_CTRL_BTIME]		= { NLA_U64, 2, "basetime"},
 	[TSN_SGI_ATTR_CTRL_INITIPV]		= { NLA_U8, 3, "initial ipv"},
-	[TSN_SGI_ATTR_CTRL_GCLENTRY]	= { NLA_NESTED, 1, "gatelist"},
+	[TSN_SGI_ATTR_CTRL_GCLENTRY]	= { NLA_NESTED + __NLA_TYPE_MAX, 1, "gatelist"},
 };
 
 struct linkpara qci_sgi_gcl[TSN_SGI_ATTR_GCL_MAX + 1] = {
-	[TSN_SGI_ATTR_GCL_GATESTATE]	= { NLA_FLAG, 2, "gate state"},
-	[TSN_SGI_ATTR_GCL_IPV]			= { NLA_U8, 3, "ipv"},
-	[TSN_SGI_ATTR_GCL_INTERVAL]		= { NLA_U32, 2, "time interval"},
-	[TSN_SGI_ATTR_GCL_OCTMAX]		= { NLA_U32, 2, "octmax"},
+	[TSN_SGI_ATTR_GCL_GATESTATE]	= { NLA_FLAG + __NLA_TYPE_MAX, 2, "gate state"},
+	[TSN_SGI_ATTR_GCL_IPV]			= { NLA_U8 + __NLA_TYPE_MAX , 3, "ipv"},
+	[TSN_SGI_ATTR_GCL_INTERVAL]		= { NLA_U32 + __NLA_TYPE_MAX, 2, "time interval"},
+	[TSN_SGI_ATTR_GCL_OCTMAX]		= { NLA_U32 + __NLA_TYPE_MAX, 2, "octmax"},
 };
 
 struct linkpara qci_fmi[TSN_QCI_FMI_ATTR_MAX + 1] = {

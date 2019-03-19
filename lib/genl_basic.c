@@ -16,7 +16,9 @@
 #include <sys/types.h>
 #include <signal.h>
 #include <malloc.h>
+#include <string.h>
 #include <cjson/cJSON.h>
+
 #include "tsn/genl_tsn.h"
 
 #define CONFIG_LIBNL3
@@ -296,6 +298,10 @@ void tsn_msg_recv_analysis(struct showtable *linkdata)
 	char *string;
 	int remain;
 	int tsn;
+	cJSON *json = NULL;
+	cJSON *link1 = NULL;
+	cJSON *link2 = NULL;
+	cJSON *link3 = NULL;
 
 	if (!linkdata)
 		tsn = 0;
@@ -355,6 +361,8 @@ void tsn_msg_recv_analysis(struct showtable *linkdata)
 
 			printf("tsn: len: %04x type: %04x data:\n", na->nla_len, na->nla_type);
 
+			json = cJSON_CreateObject();
+
 			while (len1 < na->nla_len) {
 				switch (linkdata->link1[na1->nla_type].type) {
 				case NLA_NESTED:
@@ -362,37 +370,71 @@ void tsn_msg_recv_analysis(struct showtable *linkdata)
 					struct nlattr *na2;
 					int len2 = 0;
 					int temp2 = 0;
+
+					cJSON_AddItemToObject(json, linkdata->link1[na1->nla_type].name,
+							      link1 = cJSON_CreateObject());
+
 					printf("  level2: nla->_len: %d type: %d\n\n", na1->nla_len, na1->nla_type);
 					len1 += sizeof(struct nlattr);
 					na2 = nla_data(na1);
 
 					while(len2 < na1->nla_len) {
 						switch(linkdata->link2[na2->nla_type].type) {
+						case NLA_NESTED + __NLA_TYPE_MAX:
+
 						case NLA_NESTED:
 							{
 							struct nlattr *na3;
 							int len3 = 0;
 							int temp3 = 0;
 
+							cJSON_AddItemToObject(link1, linkdata->link2[na2->nla_type].name,
+									      link2 = cJSON_CreateObject());
+
 							printf("   level3: nla->_len: %d type: %d\n\n", na2->nla_len, na2->nla_type);
 							len2 += sizeof(struct nlattr);
 							na3 = nla_data(na2);
 							while (len3 < na2->nla_len) {
 								switch(linkdata->link3[na3->nla_type].type) {
+								case NLA_FLAG + __NLA_TYPE_MAX:
 								case NLA_FLAG:
 									printf("     %s \n", linkdata->link3[na3->nla_type].name);
+									cJSON_AddItemToObject(link2,
+											linkdata->link3[na3->nla_type].name,
+											cJSON_CreateString("ON"));
+
 									break;
+								case NLA_U8 + __NLA_TYPE_MAX:
 								case NLA_U8:
 									printf("     %s = %02x\n", linkdata->link3[na3->nla_type].name, *(uint8_t *)NLA_DATA(na3));
+									cJSON_AddItemToObject(link2,
+											linkdata->link3[na3->nla_type].name,
+											cJSON_CreateNumber(*(uint8_t *)NLA_DATA(na3)));
+
 									break;
+								case NLA_U16 + __NLA_TYPE_MAX:
 								case NLA_U16:
 									printf("     %s = %x\n", linkdata->link3[na3->nla_type].name, *(uint16_t *)NLA_DATA(na3));
+									cJSON_AddItemToObject(link2,
+											linkdata->link3[na3->nla_type].name,
+											cJSON_CreateNumber(*(uint16_t *)NLA_DATA(na3)));
+
 									break;
+								case NLA_U32 + __NLA_TYPE_MAX:
 								case NLA_U32:
 									printf("     %s = %x\n", linkdata->link3[na3->nla_type].name, *(uint32_t *)NLA_DATA(na3));
+									cJSON_AddItemToObject(link2,
+											linkdata->link3[na3->nla_type].name,
+											cJSON_CreateNumber(*(uint32_t *)NLA_DATA(na3)));
+
 									break;
+								case NLA_U64 + __NLA_TYPE_MAX:
 								case NLA_U64:
 									printf("     %s = %llx\n", linkdata->link3[na3->nla_type].name, *(uint64_t *)NLA_DATA(na3));
+									cJSON_AddItemToObject(link2,
+											linkdata->link3[na3->nla_type].name,
+											cJSON_CreateNumber(*(uint64_t *)NLA_DATA(na3)));
+
 									break;
 								default:
 									break;
@@ -405,15 +447,27 @@ void tsn_msg_recv_analysis(struct showtable *linkdata)
 
 						case NLA_FLAG:
 							printf("   %s \n", linkdata->link2[na2->nla_type].name);
+							cJSON_AddItemToObject(link1, linkdata->link2[na2->nla_type].name,
+									      cJSON_CreateString("ON"));
+
 							break;
 						case NLA_U8:
 							printf("   %s = %02x\n", linkdata->link2[na2->nla_type].name, *(uint8_t *)NLA_DATA(na2));
+							cJSON_AddItemToObject(link1, linkdata->link2[na2->nla_type].name,
+									      cJSON_CreateNumber(*(uint8_t *)NLA_DATA(na2)));
+
 							break;
 						case NLA_U16:
 							printf("   %s = %x\n", linkdata->link2[na2->nla_type].name, *(uint16_t *)NLA_DATA(na2));
+							cJSON_AddItemToObject(link1, linkdata->link2[na2->nla_type].name,
+									      cJSON_CreateNumber(*(uint16_t *)NLA_DATA(na2)));
+
 							break;
 						case NLA_U32:
 							printf("   %s = %x\n", linkdata->link2[na2->nla_type].name, *(uint32_t *)NLA_DATA(na2));
+							cJSON_AddItemToObject(link1, linkdata->link2[na2->nla_type].name,
+									      cJSON_CreateNumber(*(uint32_t *)NLA_DATA(na2)));
+
 							break;
 						case NLA_U64:
 							printf("   %s = %llx\n", linkdata->link2[na2->nla_type].name, *(uint64_t *)NLA_DATA(na2));
@@ -429,23 +483,38 @@ void tsn_msg_recv_analysis(struct showtable *linkdata)
 					break;
 				case NLA_FLAG:
 					printf("   %s \n", linkdata->link1[na1->nla_type].name);
+					cJSON_AddItemToObject(json, linkdata->link1[na1->nla_type].name,
+							      cJSON_CreateString("ON"));
+
 					break;
 				case NLA_U8:
+					cJSON_AddItemToObject(json, linkdata->link1[na1->nla_type].name,
+							      cJSON_CreateNumber(*(char *)NLA_DATA(na1)));
+
 					if (linkdata->link1[na1->nla_type].len == 3)
 						printf("   %s = %02x\n", linkdata->link1[na1->nla_type].name, *(char *)NLA_DATA(na1));
 					else
 						printf("   %s = %02x\n", linkdata->link1[na1->nla_type].name, *(uint8_t *)NLA_DATA(na1));
 					break;
 				case NLA_U16:
+					cJSON_AddItemToObject(json, linkdata->link1[na1->nla_type].name,
+							      cJSON_CreateNumber(*(uint16_t *)NLA_DATA(na1)));
+
 					printf("   %s = %x\n", linkdata->link1[na1->nla_type].name, *(uint16_t *)NLA_DATA(na1));
 					break;
 				case NLA_U32:
+					cJSON_AddItemToObject(json, linkdata->link1[na1->nla_type].name,
+							      cJSON_CreateNumber(*(int32_t *)NLA_DATA(na1)));
+
 					if (linkdata->link1[na1->nla_type].len == 3)
 						printf("   %s = %x\n", linkdata->link1[na1->nla_type].name, *(int32_t *)NLA_DATA(na1));
 					else
 						printf("   %s = %x\n", linkdata->link1[na1->nla_type].name, *(uint32_t *)NLA_DATA(na1));
 					break;
 				case NLA_U64:
+					cJSON_AddItemToObject(json, linkdata->link1[na1->nla_type].name,
+							      cJSON_CreateNumber(*(uint64_t *)NLA_DATA(na1)));
+
 					if (linkdata->link1[na1->nla_type].len == 4)
 						printf("   %s = %012llx\n", linkdata->link1[na1->nla_type].name, *(uint64_t *)NLA_DATA(na1));
 					else
@@ -460,14 +529,28 @@ void tsn_msg_recv_analysis(struct showtable *linkdata)
 					printf("\n=======================================================================================\n");
 					printf("   %s\n", linkdata->link1[na1->nla_type].name);
 					p = nla_data(na1);
-					for (j = 0; j < (linkdata->link1[na1->nla_type].len / 8); j++)
+					for (j = 0; j < (linkdata->link1[na1->nla_type].len / 8); j++) {
+						char str[10];
+						
+						snprintf(str, 10, "%d", j);
+
 						printf("   %llx", *(uint64_t *)(p + j));
+
+						cJSON_AddItemToObject(json, str,
+								      cJSON_CreateNumber(*(uint64_t *)(p + j)));
+
+					}
 					printf("\n======================================================================================\n");
 					}
 					break;
 				case NLA_STRING:
 					string = (char *) NLA_DATA(na);
+
 					printf("netlink string:%s\n", string);
+
+					cJSON_AddItemToObject(json, linkdata->link1[na1->nla_type].name,
+							      cJSON_CreateString(string));
+
 					break;
 				default:
 					break;
@@ -489,7 +572,19 @@ void tsn_msg_recv_analysis(struct showtable *linkdata)
 #else
 		na += NLA_ALIGN(na->nla_len);
 #endif
+		if (json) {
+			char *buf = NULL;
+			FILE *fp = fopen("/tmp/tsntool.json","w");
+
+			printf("json structure:\n %s\n",buf = cJSON_Print(json));
+			fwrite(buf,strlen(buf),1,fp);
+			free(buf);
+			fclose(fp);
+			cJSON_Delete(json);
+		}
 	}
+
+
 }
 
 

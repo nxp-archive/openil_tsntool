@@ -3,7 +3,7 @@ It can be used for TSN endpoint and TSN switch using netlink
 interface.
 
 1. Libraries requirement
-   Libraries libnl-3.0, libtermcap, libreadline are needed.
+   Libraries libnl-3.0, libtermcap, libreadline libcjson are needed.
 
 2. How to compile the tsntool:
 
