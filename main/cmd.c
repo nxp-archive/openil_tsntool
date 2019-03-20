@@ -49,12 +49,12 @@ char sglentry_example[] = "#'NUMBER' 'GATE_VLAUE' 'IPV' 'TIME_LONG' 'OCTET_MAX'\
 					  \r#t1  1b	3	1000	1580\n";
 
 struct cli_cmd cli_commands[] = {
-	{ "help", cli_cmd_help, " ",
+	{ "help", cli_cmd_help, "show funciton",
 		{
 			{0, 0, 0, 0}
 		}
 	},
-	{ "version", cli_cmd_version, " ",
+	{ "version", cli_cmd_version, "show version ",
 		{
 			{0, 0, 0, 0}
 		}
@@ -64,7 +64,7 @@ struct cli_cmd cli_commands[] = {
 			{0, 0, 0, 0}
 		}
 	},
-	{ "quit", cli_cmd_quit, " ",
+	{ "quit", cli_cmd_quit, "quit ",
 		{
 			{0, 0, 0, 0}
 		}

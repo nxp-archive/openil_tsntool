@@ -99,7 +99,7 @@ void cli_cmd_list(void)
 
 	cmd = cli_commands;
 	while (cmd->cmd) {
-		printf("      %s ------%s\n", cmd->cmd, cmd->help);
+		printf("      %-12s\t%s\n", cmd->cmd, cmd->help);
 		cmd++;
 	}
 }
