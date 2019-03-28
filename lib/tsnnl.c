@@ -8,7 +8,6 @@
 #include <netlink/genl/ctrl.h>
 #include <netlink/genl/genl.h>
 #include <netlink/netlink.h>
-#include <main.h>
 #include "tsn/genl_tsn.h"
 
 struct linkpara qbv_base[TSN_QBV_ATTR_MAX + 1] = {
@@ -1433,7 +1432,7 @@ int tsn_cbstatus_get(char *portname, uint32_t index,
 
 	msg = tsn_send_cmd_prepare(TSN_CMD_CBSTAT_GET);
 	if (msg == NULL) {
-		loge("fail to allocate genl msg.\n");
+		lloge("fail to allocate genl msg.\n");
 		return -1;
 	}
 
@@ -1449,7 +1448,7 @@ int tsn_cbstatus_get(char *portname, uint32_t index,
 
 	ret = tsn_send_to_kernel(msg);
 	if (ret < 0) {
-		loge("genl send to kernel error\n");
+		lloge("genl send to kernel error\n");
 		return -1;
 	}
 
@@ -1517,7 +1516,7 @@ int tsn_dscp_set(char *portname, bool disable, int index,
 
 	msg = tsn_send_cmd_prepare(TSN_CMD_DSCP_SET);
 	if (msg == NULL) {
-		loge("fail to allocate genl msg.\n");
+		lloge("fail to allocate genl msg.\n");
 		return -1;
 	}
 
@@ -1542,7 +1541,7 @@ int tsn_dscp_set(char *portname, bool disable, int index,
 
 	ret = tsn_send_to_kernel(msg);
 	if (ret < 0) {
-		loge("genl send to kernel error\n");
+		lloge("genl send to kernel error\n");
 		return -1;
 	}
 
