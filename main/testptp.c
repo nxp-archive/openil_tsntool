@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: (GPL-2.0 OR MIT)
 /*
- * Copyright 2018 NXP
+ * Copyright 2018-2019 NXP
  */
 
 #define _GNU_SOURCE
@@ -168,6 +168,8 @@ int testptp(int argc, char *argv[])
 
 	int64_t t1, t2, tp;
 	int64_t interval, offset;
+	optind = 0;
+	optarg = EOF;
 
 	progname = strrchr(argv[0], '/');
 	progname = progname ? 1+progname : argv[0];
@@ -239,6 +241,9 @@ int testptp(int argc, char *argv[])
 			return -1;
 		}
 	}
+
+	optind = 0;
+	optarg = EOF;
 
 	fd = open(device, O_RDWR);
 	if (fd < 0) {
