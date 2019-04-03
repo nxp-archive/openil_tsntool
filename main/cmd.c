@@ -398,7 +398,7 @@ static inline int is_hex_oct(char *str)
 	}
 
 	while (*str != '\0') {
-		if (*str <= '9' && *str >= '0') {
+		if (*str <= '9' && *str >= '0' || *str == '.') {
 			str++;
 			continue;
 		} else {
@@ -408,6 +408,32 @@ static inline int is_hex_oct(char *str)
 	}
 
 	return 10;
+}
+
+uint64_t get_seconds_time(char *optbuf)
+{
+	uint64_t basetime, basetimel, basetimeh;
+	char *pt;
+	char bufs[32];
+
+	pt = strrchr(optarg, '.');
+	if (pt) {
+		basetimel = strtoul(pt + 1, NULL, 10);
+		strncpy(bufs, optbuf, pt - optbuf);
+
+		basetimeh = strtoul(bufs, NULL, 10);
+		while (basetimel < 1000000000)
+			basetimel *= 10;
+
+		while (basetimel > 1000000000)
+			basetimel /= 10;
+
+		basetime = basetimeh * 1000000000 + basetimel;
+	} else {
+		basetime = strtoul(optbuf, NULL, 10);
+	}
+
+	return basetime;
 }
 
 static void cmd_qbvset_help(void)
@@ -506,7 +532,11 @@ int cli_cmd_qbv_set(UNUSED int argc, UNUSED char *argv[], UNUSED int cmdnumber)
 				loge("basetime parameter error.\n");
 				return -1;
 			}
-			basetime = strtoul(optarg, NULL, ret);
+			if (ret == 16) {
+				basetime = strtoul(optarg, NULL, ret);
+			} else {
+				basetime = get_seconds_time(optarg);
+			}
 
 			break;
 		case 'y':
@@ -1178,7 +1208,13 @@ int cli_cmd_qci_sgi_set(UNUSED int argc, UNUSED char *argv[], UNUSED int cmdnumb
 			ret = is_hex_oct(optarg);
 			if (ret < 0)
 				return -1;
-			basetime = strtoul(optarg, NULL, ret);
+
+			if (ret == 16) {
+				basetime = strtoul(optarg, NULL, ret);
+			} else {
+				basetime = get_seconds_time(optarg);
+			}
+
 			break;
 		case 'p':
 			ret = is_hex_oct(optarg);
