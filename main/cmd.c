@@ -390,7 +390,7 @@ static inline int is_hex_oct(char *str)
 				str++;
 				continue;
 			} else {
-				printf("parameter '%s' is not right Hex expression\n", opt);
+				loge("warning:parameter '%s' is not right Hex expression\n", opt);
 				return -1;
 			}
 		}
@@ -402,7 +402,7 @@ static inline int is_hex_oct(char *str)
 			str++;
 			continue;
 		} else {
-			printf("parameter '%s' is not right Decimal expression\n", opt);
+			loge("warning: parameter '%s' is not right Decimal expression\n", opt);
 			return -1;
 		}
 	}
@@ -887,6 +887,8 @@ int cli_cmd_streamid_set(UNUSED int argc, UNUSED char *argv[], UNUSED int cmdnum
 	struct option *long_options = &cli_commands[cmdnumber].long_options[0];
 	int option_index = 0;
 	char portname[IF_NAMESIZE];
+	char smac[6];
+	int i;
 
 	memset(&streamid, 0, sizeof(struct tsn_cb_streamid));
 
@@ -971,9 +973,17 @@ int cli_cmd_streamid_set(UNUSED int argc, UNUSED char *argv[], UNUSED int cmdnum
 		/* destination mac */
 		case 'm':
 			ret = is_hex_oct(optarg);
-			if (ret < 0)
-				return -1;
-			mac = strtoull(optarg, NULL, ret);
+			if (ret == 16) {
+				mac = strtoull(optarg, NULL, ret);
+			} else {
+				char temp[25];
+				strcpy(temp, optarg);
+				sscanf(temp, "%2hx:%2hx:%2hx:%2hx:%2hx:%2hx",
+						&smac[0], &smac[1], &smac[2], &smac[3], &smac[4], &smac[5]);
+				mac = 0;
+				for (i = 0; i < 6; i++)
+					mac = (mac << 8) + smac[i];
+			}
 			break;
 		/* tagged */
 		case 'g':
@@ -992,9 +1002,17 @@ int cli_cmd_streamid_set(UNUSED int argc, UNUSED char *argv[], UNUSED int cmdnum
 		/* source mac */
 		case 'a':
 			ret = is_hex_oct(optarg);
-			if (ret < 0)
-				return -1;
-			mac = strtoull(optarg, NULL, ret);
+			if (ret == 16) {
+				mac = strtoull(optarg, NULL, ret);
+			} else {
+				char temp[25];
+				strcpy(temp, optarg);
+				sscanf(temp, "%2hx:%2hx:%2hx:%2hx:%2hx:%2hx",
+						&smac[0], &smac[1], &smac[2], &smac[3], &smac[4], &smac[5]);
+				mac = 0;
+				for (i = 0; i < 6; i++)
+					mac = (mac << 8) + smac[i];
+			}
 			break;
 		/* tagged */
 		case 'b':
