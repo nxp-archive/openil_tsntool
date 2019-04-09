@@ -422,7 +422,7 @@ uint64_t get_seconds_time(char *optbuf)
 		strncpy(bufs, optbuf, pt - optbuf);
 
 		basetimeh = strtoul(bufs, NULL, 10);
-		while (basetimel < 1000000000)
+		while (basetimel && basetimel < 1000000000)
 			basetimel *= 10;
 
 		while (basetimel > 1000000000)

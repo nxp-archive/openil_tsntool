@@ -30,7 +30,7 @@ int VERBOSE_CONDITION = 0;
 
 extern struct cli_cmd cli_commands[];
 
-#define TSNTOOL_VERSION "V0.1"
+#define TSNTOOL_VERSION "V0.2"
 
 const char *cli_version =
 "tsntool " TSNTOOL_VERSION "\n"
