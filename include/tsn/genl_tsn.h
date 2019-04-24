@@ -9,7 +9,17 @@
 #include <netlink/netlink.h>
 #include <netlink/socket.h>
 #include <netlink/msg.h>
+#include <linux/netlink.h>
 #include <linux/genetlink.h>
+
+#define MAX_MSGSIZE 256
+#ifndef SOL_NETLINK
+#define SOL_NETLINK 270
+#endif
+
+#ifndef NETLINK_LISTEN_ALL_NSID
+#define NETLINK_LISTEN_ALL_NSID 8
+#endif
 
 typedef unsigned char u8;
 typedef unsigned int u32;

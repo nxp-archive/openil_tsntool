@@ -33,6 +33,7 @@ static int tsn_create_nl_socket(int protocol)
 {
 	int fd;
 	struct sockaddr_nl local;
+	int val;
 
 	/* create socket */
 	fd = socket(AF_NETLINK, SOCK_RAW, protocol);
@@ -46,6 +47,14 @@ static int tsn_create_nl_socket(int protocol)
 	/* pid */
 	if (bind(fd, (struct sockaddr *) &local, sizeof(local)) < 0)
 		goto error;
+
+	val = 1;
+	if (setsockopt(fd, SOL_NETLINK, NETLINK_LISTEN_ALL_NSID, &val,
+		       sizeof val) < 0) {
+		printf("netlink: could not %s listening to all nsid (%s)",
+			val ? "enable" : "disable", TSN_GENL_NAME);
+		goto error;
+	}
 
 	return fd;
 
@@ -262,8 +271,17 @@ static int genl_get_family_id(int sd, char *family_name)
 	if (rep_len < 0)
 		return 0;
 
-	if (ans.n.nlmsg_type == NLMSG_ERROR || !NLMSG_OK((&ans.n), rep_len))
-		return 0;
+	if (ans.n.nlmsg_type == NLMSG_ERROR || !NLMSG_OK((&ans.n), rep_len)) {
+		printf("nlmsg type is %d length %d\n", ans.n.nlmsg_type, rep_len);
+		if (ans.n.nlmsg_type == NLMSG_ERROR) {
+			struct nlmsgerr *err = (struct nlmsgerr *)NLMSG_DATA(&ans.n);
+			if (ans.n.nlmsg_len < NLMSG_LENGTH(sizeof(struct nlmsgerr)))
+				printf("ERROR truncated\n");
+			else
+				printf("got error reply. error NO. is %d\n", -err->error);
+		}
+		return -1;
+	}
 
 	na = (struct nlattr *) GENLMSG_USER_DATA(&ans);
 	na = (struct nlattr *) ((char *) na + NLA_ALIGN(na->nla_len));
