@@ -11,6 +11,7 @@
 #include <netlink/msg.h>
 #include <linux/netlink.h>
 #include <linux/genetlink.h>
+#include <time.h>
 
 #define MAX_MSGSIZE 256
 #ifndef SOL_NETLINK
@@ -31,6 +32,7 @@ typedef enum boolean {
 } bool;
 
 #define ptptime_t uint64_t
+#define NUM_THREADS 100
 
 #include <linux/tsn.h>
 
@@ -276,6 +278,44 @@ enum {
 
 #define MAX_NAME_LEN 100
 
+struct info_type {
+	char name[MAX_NAME_LEN];
+
+};
+
+struct qbv_multicast {
+	uint64_t cct;
+	uint32_t offset;
+	int ifidx;
+	bool en;
+	void *callback_func;
+	void *data;
+};
+
+struct qci_multicast {
+	uint64_t cct;
+	uint32_t offset;
+	int ifidx;
+	bool en;
+	void *callback_func;
+	void *data;
+};
+
+struct alarm_info {
+	char *ptpdev[MAX_NAME_LEN];
+	clockid_t clkid;
+	struct {
+		struct qbv_multicast qbvmc;
+		struct qci_multicast qcimc;
+	};
+};
+
+struct tsn_family_groups {
+	uint16_t family_id;
+	uint32_t mc[TSN_MCGRP_MAX];
+	struct alarm_info *ai;
+};
+
 struct linkpara {
 	int type;
 	char len;
@@ -390,4 +430,12 @@ int tsn_cbstatus_get(char *portname, uint32_t index,
 int tsn_pcpmap_set(char *portname, bool enable);
 int tsn_dscp_set(char *portname, bool disable, int index,
 		 struct tsn_qos_switch_dscp_conf *dscp_conf);
+int64_t pctns(struct timespec *t);
+int get_net_ifindex_by_name(const char *eth_name, uint32_t *ifindex);
+int set_period_alarm(uint64_t ts, uint64_t offset,
+		     uint64_t cycle, void (*callback_func)(void *data), void *data);
+pthread_t *create_alarm_common(uint64_t ts, uint32_t offset, uint32_t cycle,
+			      void (*callback_func)(void *data), void *data);
+int delete_alarm_common(pthread_t *thread);
+int wait_tsn_multicast();
 #endif /* _TSN_GENETLINK_KERN_H */

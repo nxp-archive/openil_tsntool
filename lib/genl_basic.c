@@ -14,10 +14,12 @@
 #include <sys/stat.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <sys/ioctl.h>
 #include <signal.h>
 #include <malloc.h>
 #include <string.h>
 #include <cjson/cJSON.h>
+#include <net/if.h>
 
 #include "tsn/genl_tsn.h"
 
@@ -668,6 +670,37 @@ int tsn_echo_test(char *string, int data)
 	/* receive message and (only 2 message types) */
 	tsn_msg_recv_analysis(NULL);
 	tsn_msg_recv_analysis(NULL);
+
+	return 0;
+}
+
+int get_net_ifindex_by_name(const char *eth_name, uint32_t *ifindex)
+{
+	int skfd = -1;
+	struct ifreq ifr;
+
+	if(eth_name == NULL)
+	{
+		return -1;
+	} else {
+		strcpy(ifr.ifr_name, eth_name);
+	}
+
+	skfd = socket(PF_INET, SOCK_DGRAM, 0);
+	if (skfd < 0) {
+		return -1;
+	}
+
+	if (ioctl(skfd, SIOCGIFINDEX, &ifr) == 0) {
+		*ifindex = ifr.ifr_ifindex;
+		printf("Got if index %d by name %s\n", *ifindex, eth_name);
+	} else {
+		printf("Do not get any device with name %s\n", eth_name);
+		close(skfd);
+		return -1;
+	}
+
+	close(skfd);
 
 	return 0;
 }
