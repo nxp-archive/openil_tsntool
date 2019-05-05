@@ -24,8 +24,9 @@ LIB_OBJ  = $(filter %.o, $(LIB_DEPS))              # Only the .o files
 
 TSN_BIN = tsntool
 TSN_LIB = libtsn.so
+TSN_EVENT = event
 
-build: $(TSN_LIB) $(TSN_BIN)
+build: $(TSN_LIB) $(TSN_BIN) $(TSN_EVENT)
 
 $(TSN_LIB): $(LIB_DEPS)
 	$(CC) -shared $(LIB_OBJ) -o $@ $(LIB_LDFLAGS)
@@ -33,13 +34,19 @@ $(TSN_LIB): $(LIB_DEPS)
 $(TSN_BIN): $(BIN_DEPS)
 	$(CC) $(BIN_OBJ) -o $@ $(BIN_LDFLAGS)
 
+$(TSN_EVENT): tools/event.o
+	$(CC) tools/event.o -o tools/$(TSN_EVENT) $(BIN_LDFLAGS)
+
 lib/%.o: lib/%.c
 	$(CC)  -c $^ -o $@ $(LIB_CFLAGS)
 
 main/%.o: main/%.c
 	$(CC)  -c $^ -o $@ $(BIN_CFLAGS)
 
+tools/event.o: tools/event.c
+	$(CC) -c tools/event.c -o tools/event.o $(BIN_CFLAGS)
+
 clean:
-	rm -rf $(TSN_BIN) $(TSN_LIB) $(LIB_OBJ) $(BIN_OBJ)
+	rm -rf $(TSN_BIN) $(TSN_LIB) $(LIB_OBJ) $(BIN_OBJ) tools/event.o tools/event
 
 .PHONY: clean build
