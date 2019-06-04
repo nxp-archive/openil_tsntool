@@ -604,6 +604,7 @@ void tsn_msg_recv_analysis(struct showtable *linkdata)
 			free(buf);
 			fclose(fp);
 			cJSON_Delete(json);
+			json = NULL;
 		}
 	}
 }
