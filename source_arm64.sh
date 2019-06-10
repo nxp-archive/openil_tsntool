@@ -24,3 +24,5 @@ if [ ! -f ./include/linux/tsn.h ]; then
 fi
 
 sudo cp ${KERNELDIR}/include/uapi/linux/tsn.h include/linux/
+sudo cp ${KERNELDIR}/include/uapi/linux/net_tstamp.h include/linux/
+sudo cp ${KERNELDIR}/include/uapi/linux/errqueue.h include/linux/

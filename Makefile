@@ -25,8 +25,9 @@ LIB_OBJ  = $(filter %.o, $(LIB_DEPS))              # Only the .o files
 TSN_BIN = tsntool
 TSN_LIB = libtsn.so
 TSN_EVENT = event
+TSTAMP_BIN = timestamping
 
-build: $(TSN_LIB) $(TSN_BIN) $(TSN_EVENT)
+build: $(TSN_LIB) $(TSN_BIN) $(TSN_EVENT) $(TSTAMP_BIN)
 
 $(TSN_LIB): $(LIB_DEPS)
 	$(CC) -shared $(LIB_OBJ) -o $@ $(LIB_LDFLAGS)
@@ -34,8 +35,11 @@ $(TSN_LIB): $(LIB_DEPS)
 $(TSN_BIN): $(BIN_DEPS)
 	$(CC) $(BIN_OBJ) -o $@ $(BIN_LDFLAGS)
 
-$(TSN_EVENT): tools/event.o
-	$(CC) tools/event.o -o tools/$(TSN_EVENT) $(BIN_LDFLAGS)
+$(TSN_EVENT): tools/$(TSN_EVENT).o
+	$(CC) tools/$(TSN_EVENT).o -o tools/$(TSN_EVENT) $(BIN_LDFLAGS)
+
+$(TSTAMP_BIN): tools/$(TSTAMP_BIN).o
+	$(CC) tools/$(TSTAMP_BIN).o -o tools/$(TSTAMP_BIN) $(BIN_LDFLAGS)
 
 lib/%.o: lib/%.c
 	$(CC)  -c $^ -o $@ $(LIB_CFLAGS)
@@ -43,10 +47,14 @@ lib/%.o: lib/%.c
 main/%.o: main/%.c
 	$(CC)  -c $^ -o $@ $(BIN_CFLAGS)
 
-tools/event.o: tools/event.c
-	$(CC) -c tools/event.c -o tools/event.o $(BIN_CFLAGS)
+tools/$(TSN_EVENT).o: tools/$(TSN_EVENT).c
+	$(CC) -c tools/$(TSN_EVENT).c -o tools/$(TSN_EVENT).o $(BIN_CFLAGS)
+
+tools/$(TSTAMP_BIN).o: tools/$(TSTAMP_BIN).c
+	$(CC) -c tools/$(TSTAMP_BIN).c -o tools/$(TSTAMP_BIN).o $(BIN_CFLAGS)
+
 
 clean:
-	rm -rf $(TSN_BIN) $(TSN_LIB) $(LIB_OBJ) $(BIN_OBJ) tools/event.o tools/event
+	rm -rf $(TSN_BIN) $(TSN_LIB) $(LIB_OBJ) $(BIN_OBJ) tools/*.o tools/$(TSN_EVENT) tools/$(TSTAMP_BIN)
 
 .PHONY: clean build
