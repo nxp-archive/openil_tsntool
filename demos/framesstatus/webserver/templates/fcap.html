@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html style="height: 100%">
+   <head>
+       <meta charset="utf-8">
+	<script src="{{url_for('static', filename='jquery.min.js')}}"></script>
+//	<script type="text/javascript" src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+//	<script type="text/javascript" src="http://echarts.baidu.com/gallery/vendors/echarts/echarts.min.js"></script>
+	<script src="{{url_for('static', filename='echarts.js')}}"></script>
+	<script type=text/javascript>
+	var $SCRIPT_ROOT = {{request.script_root|tojson|safe}};
+	</script>
+<script type="text/javascript">
+$(document).ready(function(){
+        $(".qbvenable").click(function(){
+                $.get("/qbvenable",function(data, status){
+			alert(data);
+                });
+        });
+        $(".qbvdisable").click(function(){
+		$.get("/qbvdisable",function(data, status){
+			alert(data);
+		});
+        });
+        $(".qcienable").click(function(){
+                $.get("/qcienable",function(data, status){
+			alert(data);
+                });
+        });
+        $(".qcidisable").click(function(){
+                $.get("/qcidisable",function(data, status){
+			alert(data);
+                });
+        });
+});
+</script>
+
+   </head>
+<body style="height: 100%; margin: 0">
+        <div id="frames" style="float:left; width:50%;height: 100%"></div>
+        <div id="bandwidth" style="float:right; width:50%;height:100%"></div>
+	<div>
+	<button class="qbvenable" style="float:left;display: inline-block;margin:20px;">Qbv Enable</button>
+	<button class="qbvdisable" style="float:left;display: inline-block;margin:20px;">Qbv Disable</button>
+	<button class="qcienable" style="float:left;display: inline-block;margin:20px;">Qci Enable</button>
+	<button class="qcidisable" style="float:left;display: inline-block;margin:20px;">Qci Disable</button>
+	</div>
+	<br/><br/>
+
+	<!-- frames capture charts -->      
+<script type="text/javascript">
+	var dom = document.getElementById("frames");
+	var myChart1 = echarts.init(dom);
+	var app = {};
+	option = null;
+	var xAxisData = [];
+	var data1 = [];
+	var data2 = [];
+
+	$.ajaxSetup({cache:false});
+
+	function refresh() {
+	    $.getJSON("../static/tsnframetstamp.json", function(sdata, status){
+			var pass = 0;
+			var value = 0;
+			for (var i = 0; i < parseInt(sdata.CYCLE/1000000); i++) {
+				xAxisData[i] = parseInt(sdata.STARTTIME/1000000) + i;
+				if (i == 0 || i == (parseInt(sdata.CYCLE/1000000) - 1)) {
+					data1[i] = 2;
+				} else {
+					data1[i] = 0;
+				}
+				if (pass >= sdata.FRAME.length) {
+					data2[i] = 0;
+					continue;
+				}
+				value = parseInt((sdata.FRAME[pass].TIME - sdata.STARTTIME)/1000000);
+				if (i != value) {
+					data2[i] = 0;
+					continue;
+				}
+
+				data2[i] = sdata.FRAME[pass].TC + 1;
+
+				while (i == value) {
+					pass++;
+					if (pass >= sdata.FRAME.length)
+						break;
+					value = parseInt((sdata.FRAME[pass].TIME - sdata.STARTTIME)/1000000);
+				}
+
+			}
+			});
+	}
+
+	refresh();
+
+	option = {
+	    xAxis: {
+	        type: 'category',
+	        data:  xAxisData
+	    },
+	    yAxis: {
+	        type: 'value'
+	    },
+	    series: [{
+			data: data1,
+			type: 'bar'
+		    }, {
+			data: data2,
+			type: 'bar'
+		    }]
+	};
+	;
+
+	setInterval(function () {
+
+	    refresh(true);
+	    myChart1.setOption({
+	        xAxis: {
+	            data: xAxisData
+	        },
+	        series: [{
+	            name:'slot',
+	            data: data1
+		    }, {
+		    name:'frame',
+		    data: data2
+		    }]
+	    });
+	}, 500);;
+
+	if (option && typeof option === "object") {
+	    myChart1.setOption(option, true);
+	}
+</script>
+
+
+<!-- frame charts-->
+<script type="text/javascript">
+	var dom = document.getElementById("bandwidth");
+	var myChart = echarts.init(dom);
+	var app = {};
+	option = null;
+	var date = [];
+	var txdata = [];
+	var rxdata = [];
+	var buf = [];
+
+	$.ajaxSetup({cache:false});
+
+	function addData(shift) {
+	    $.getJSON("../static/txrxpkts.json", function(sdata, status){
+			date.push(sdata.TIME);
+			txdata.push(sdata.TX);
+			rxdata.push(sdata.RX);
+			});
+
+	    if (shift) {
+	        date.shift();
+	        txdata.shift();
+		rxdata.shift();
+	    }
+	}
+
+	for (var i = 1; i < 100; i++) {
+	    addData();
+	}
+
+	option = {
+	    xAxis: {
+	        type: 'category',
+	        data:  date
+	    },
+	    yAxis: {
+	        type: 'value'
+	    },
+	    series: [{
+			data: txdata,
+			type: 'line'
+		    }, {
+			data: rxdata,
+			type: 'line'
+		    }]
+	};
+	;
+
+	setInterval(function () {
+
+	    addData(true);
+	    myChart.setOption({
+	        xAxis: {
+	            data: date
+	        },
+	        series: [{
+	            name:'transmit',
+	            data: txdata
+		    }, {
+		    name:'receive',
+		    data: rxdata
+		    }]
+	    });
+	}, 1000);;
+
+	if (option && typeof option === "object") {
+	    myChart.setOption(option, true);
+	}
+</script>
+
+   </body>
+</html>
