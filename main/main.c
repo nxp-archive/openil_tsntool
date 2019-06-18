@@ -210,6 +210,7 @@ int main(int argc, char *argv[])
 	sigaction(SIGTERM, &action, NULL);
 
 	for (;;) {
+		opterr = 0;
 		c = getopt(argc, argv, "hrv");
 		if (c < 0 || run)
 			break;
@@ -229,6 +230,9 @@ int main(int argc, char *argv[])
 			break;
 		default:
 			run = 1;
+			optind = 0;
+			optarg = EOF;
+
 			break;
 		}
 	}

@@ -604,10 +604,7 @@ void tsn_msg_recv_analysis(struct showtable *linkdata)
 			cJSON_Delete(json);
 		}
 	}
-
-
 }
-
 
 int genl_tsn_init(void)
 {
