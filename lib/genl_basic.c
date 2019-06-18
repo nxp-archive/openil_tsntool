@@ -607,10 +607,7 @@ void tsn_msg_recv_analysis(struct showtable *linkdata)
 			json = NULL;
 		}
 	}
-
-
 }
-
 
 int genl_tsn_init(void)
 {
