@@ -247,9 +247,9 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
-	tsn_echo_test("test netlink", 1);
-
 	if (interactive) {
+		tsn_echo_test("test netlink", 1);
+
 		printf("%s\n\n", cli_version);
 
 		cli_interactive();
@@ -257,5 +257,5 @@ int main(int argc, char *argv[])
 		ret = request(argc - 1, &argv[1]);
 
 	genl_tsn_close();
-	return 0;
+	return ret;
 }
