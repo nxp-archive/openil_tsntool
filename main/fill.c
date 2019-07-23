@@ -686,11 +686,6 @@ int fill_cbstatus_get(char *portname, int32_t index)
 	return ret;
 }
 
-int fill_pcpmap_set(char *portname, bool enable)
-{
-	return tsn_pcpmap_set(portname, enable);
-}
-
 int fill_dscp_set(char *portname, bool disable, int index, int cos, int dpl)
 {
 	struct tsn_qos_switch_dscp_conf dscp_conf;

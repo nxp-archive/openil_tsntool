@@ -1467,43 +1467,6 @@ err:
 	return -1;
 }
 
-int tsn_pcpmap_set(char *portname, bool enable)
-{
-	struct msgtemplate *msg;
-	struct nlattr *pcpmapattr;
-	int ret;
-
-	if (portname == NULL)
-		return -1;
-
-	msg = tsn_send_cmd_prepare(TSN_CMD_PCPMAP_SET);
-	if (msg == NULL) {
-		lloge("fail to allocate genl msg.\n");
-		return -1;
-	}
-
-	tsn_send_cmd_append_attr(msg, TSN_ATTR_IFNAME, portname, strlen(portname) + 1);
-
-
-	pcpmapattr = tsn_nla_nest_start(msg, TSN_ATTR_PCPMAP);
-	if (!pcpmapattr)
-		return -1;
-
-	if(enable)
-		tsn_send_cmd_append_attr(msg, TSN_PCPMAP_ATTR_ENABLE,
-					 &(enable), 0);
-	tsn_nla_nest_end(msg, pcpmapattr);
-
-	ret = tsn_send_to_kernel(msg);
-	if (ret < 0) {
-		lloge("genl send to kernel error\n");
-		return -1;
-	}
-
-	tsn_msg_recv_analysis(NULL);
-	return 0;
-}
-
 int tsn_dscp_set(char *portname, bool disable, int index,
 		 struct tsn_qos_switch_dscp_conf *dscp_conf)
 {
