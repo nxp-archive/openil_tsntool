@@ -392,7 +392,7 @@ static inline int tsn_nla_nest_end(struct msgtemplate *msg, struct nlattr *start
 struct msgtemplate *tsn_send_cmd_prepare(__u8 genl_cmd);
 void tsn_send_cmd_append_attr(struct msgtemplate *msg, __u16 nla_type, void *nla_data, int nla_len);
 int tsn_send_to_kernel(struct msgtemplate *msg);
-void tsn_msg_recv_analysis(struct showtable *linkdata);
+int tsn_msg_recv_analysis(struct showtable *linkdata);
 
 int genl_tsn_init(void);
 void genl_tsn_close(void);

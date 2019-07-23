@@ -166,7 +166,7 @@ int tsn_send_to_kernel(struct msgtemplate *msg)
 			buflen -= r;
 		} else if (errno != EAGAIN) {
 			free(msg);
-			return -1;
+			return -errno;
 		}
 	}
 
@@ -307,9 +307,10 @@ int tsn_msg_check(struct msgtemplate msg, int rep_len)
 	return 0;
 }
 
-void tsn_msg_recv_analysis(struct showtable *linkdata)
+int tsn_msg_recv_analysis(struct showtable *linkdata)
 {
 	int rep_len;
+	int ret = 0;
 	int len, len1;
 	struct nlattr *na, *na1;
 	struct msgtemplate msg;
@@ -332,7 +333,7 @@ void tsn_msg_recv_analysis(struct showtable *linkdata)
 	rep_len = recv(glb_conf.genl_fd, &msg, sizeof(msg), 0);
 	if (rep_len < 0 || tsn_msg_check(msg, rep_len) < 0) {
 		fprintf(stderr, "nonfatal reply error: errno %d\n", errno);
-		return;
+		return -errno;
 	}
 	PRINTF("received %d bytes\n", rep_len);
 	PRINTF("nlmsghdr size=%zu, nlmsg_len=%d, rep_len=%d\n",
@@ -354,6 +355,7 @@ void tsn_msg_recv_analysis(struct showtable *linkdata)
 			/* get kernel data echo */
 			data = *(int *) NLA_DATA(na);
 			printf("echo reply:%d\n", data);
+			ret = data;
 			break;
 		case TSN_ATTR_IFNAME:
 			string = (char *) NLA_DATA(na);
@@ -607,6 +609,7 @@ void tsn_msg_recv_analysis(struct showtable *linkdata)
 			json = NULL;
 		}
 	}
+	return ret;
 }
 
 int genl_tsn_init(void)

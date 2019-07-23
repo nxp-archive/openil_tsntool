@@ -9,6 +9,7 @@
 #include <netlink/genl/genl.h>
 #include <netlink/netlink.h>
 #include "tsn/genl_tsn.h"
+#include <errno.h>
 
 struct linkpara qbv_base[TSN_QBV_ATTR_MAX + 1] = {
 	[TSN_QBV_ATTR_CONFIGCHANGE]			= {0,0,0},
@@ -153,7 +154,7 @@ struct linkpara cb_get[TSN_CBSTAT_ATTR_MAX + 1] = {
 
 int tsn_qci_streampara_get(struct tsn_qci_psfp_stream_param *sp)
 {
-	return -1;
+	return -EINVAL;
 }
 
 /* tsn_cb_streamid_set()
@@ -174,15 +175,15 @@ int tsn_cb_streamid_set(char *portname, uint32_t sid_index, bool enable,
 	int ret;
 
 	if ((sid == NULL) && enable)
-		return -1;
+		return -EINVAL;
 
 	if (portname == NULL)
-		return -1;
+		return -EINVAL;
 
 	msg = tsn_send_cmd_prepare(TSN_CMD_CB_STREAMID_SET);
 	if (msg == NULL) {
 		lloge("fail to allocate genl msg.\n");
-		return -1;
+		return -ENOMEM;
 	}
 
 	tsn_send_cmd_append_attr(msg, TSN_ATTR_IFNAME, portname, strlen(portname) + 1);
@@ -251,16 +252,13 @@ sendmsg1:
 	ret = tsn_send_to_kernel(msg);
 	if (ret < 0) {
 		lloge("genl send to kernel error\n");
-		return -1;
+		return ret;
 	}
 
-	tsn_msg_recv_analysis(NULL);
-
-	return 0;
-
+	return tsn_msg_recv_analysis(NULL);
 err:
 	free(msg);
-	return -1;
+	return -EINVAL;
 }
 
 /* tsn_cb_streamid_get()
@@ -279,17 +277,17 @@ int tsn_cb_streamid_get(char *portname, uint32_t sid_index, struct tsn_cb_stream
 	struct showtable streamidget;
 
 	if (portname == NULL)
-		return -1;
+		return -EINVAL;
 
 	if (sid == NULL) {
 		lloge("error: please allocate the struct tsn_cb_streamid ");
-		return -1;
+		return -EINVAL;
 	}
 
 	msg = tsn_send_cmd_prepare(TSN_CMD_CB_STREAMID_GET);
 	if (msg == NULL) {
 		lloge("fail to allocate genl msg.\n");
-		return -1;
+		return -ENOMEM;
 	}
 
 	tsn_send_cmd_append_attr(msg, TSN_ATTR_IFNAME, portname, strlen(portname) + 1);
@@ -305,7 +303,7 @@ int tsn_cb_streamid_get(char *portname, uint32_t sid_index, struct tsn_cb_stream
 	ret = tsn_send_to_kernel(msg);
 	if (ret < 0) {
 		lloge("genl send to kernel error\n");
-		return -1;
+		return ret;
 	}
 
 	/* TODO : fill the sid */
@@ -314,13 +312,11 @@ int tsn_cb_streamid_get(char *portname, uint32_t sid_index, struct tsn_cb_stream
 	streamidget.link1 = &cb_streamid;
 	streamidget.len2 = 0;
 	streamidget.len3 = 0;
-	tsn_msg_recv_analysis(&streamidget);
-
-	return 0;
+	return tsn_msg_recv_analysis(&streamidget);
 
 err:
 	free(msg);
-	return -1;
+	return -EINVAL;
 }
 
 /* tsn_qci_psfp_sfi_set()
@@ -345,15 +341,15 @@ int tsn_qci_psfp_sfi_set(char *portname, uint32_t sfi_handle, bool enable,
 	int ret;
 
 	if ((sfi == NULL) && enable)
-		return -1;
+		return -EINVAL;
 
 	if (portname == NULL)
-		return -1;
+		return -EINVAL;
 
 	msg = tsn_send_cmd_prepare(TSN_CMD_QCI_SFI_SET);
 	if (msg == NULL) {
 		lloge("fail to allocate genl msg.\n");
-		return -1;
+		return -ENOMEM;
 	}
 
 	tsn_send_cmd_append_attr(msg, TSN_ATTR_IFNAME, portname, strlen(portname) + 1);
@@ -407,16 +403,14 @@ sendmsg1:
 	ret = tsn_send_to_kernel(msg);
 	if (ret < 0) {
 		lloge("genl send to kernel error\n");
-		return -1;
+		return ret;
 	}
 
-	tsn_msg_recv_analysis(NULL);
-
-	return 0;
+	return tsn_msg_recv_analysis(NULL);
 
 err:
 	free(msg);
-	return -1;
+	return -EINVAL;
 }
 
 /* tsn_qci_psfp_sfi_get()
@@ -440,12 +434,12 @@ int tsn_qci_psfp_sfi_get(char *portname, uint32_t sfi_handle,
 	struct showtable sfiget;
 
 	if (portname == NULL)
-		return -1;
+		return -EINVAL;
 
 	msg = tsn_send_cmd_prepare(TSN_CMD_QCI_SFI_GET);
 	if (msg == NULL) {
 		lloge("fail to allocate genl msg.\n");
-		return -1;
+		return -ENOMEM;
 	}
 
 	tsn_send_cmd_append_attr(msg, TSN_ATTR_IFNAME, portname, strlen(portname) + 1);
@@ -461,7 +455,7 @@ int tsn_qci_psfp_sfi_get(char *portname, uint32_t sfi_handle,
 	ret = tsn_send_to_kernel(msg);
 	if (ret < 0) {
 		lloge("genl send to kernel error\n");
-		return -1;
+		return ret;
 	}
 
 	/* TODO: receive the feedback and return */
@@ -470,13 +464,10 @@ int tsn_qci_psfp_sfi_get(char *portname, uint32_t sfi_handle,
 	sfiget.link1 = &qci_sfi;
 	sfiget.len2 = 0;
 	sfiget.len3 = 0;
-	tsn_msg_recv_analysis(&sfiget);
-
-	return 0;
-
+	return tsn_msg_recv_analysis(&sfiget);
 err:
 	free(msg);
-	return -1;
+	return -EINVAL;
 }
 
 /* tsn_qci_psfp_sfi_counters_get()
@@ -498,12 +489,12 @@ int tsn_qci_psfp_sfi_counters_get(char *portname, uint32_t sfi_handle,
 	int ret;
 
 	if (portname == NULL)
-		return -1;
+		return -EINVAL;
 
 	msg = tsn_send_cmd_prepare(TSN_CMD_QCI_SFI_GET_COUNTS);
 	if (msg == NULL) {
 		lloge("fail to allocate genl msg.\n");
-		return -1;
+		return -ENOMEM;
 	}
 
 	tsn_send_cmd_append_attr(msg, TSN_ATTR_IFNAME, portname, strlen(portname) + 1);
@@ -519,17 +510,15 @@ int tsn_qci_psfp_sfi_counters_get(char *portname, uint32_t sfi_handle,
 	ret = tsn_send_to_kernel(msg);
 	if (ret < 0) {
 		lloge("genl send to kernel error\n");
-		return -1;
+		return ret;
 	}
 
 	/* TODO: receive the feedback and return */
-	tsn_msg_recv_analysis(NULL);
-
-	return 0;
+	return tsn_msg_recv_analysis(NULL);
 
 err:
 	free(msg);
-	return -1;
+	return -EINVAL;
 }
 
 int tsn_qci_psfp_sgi_set(char *portname, uint32_t sgi_handle, bool enable,
@@ -544,15 +533,15 @@ int tsn_qci_psfp_sgi_set(char *portname, uint32_t sgi_handle, bool enable,
 	uint32_t cycle = 0;
 
 	if ((sgi == NULL) && enable)
-		return -1;
+		return -EINVAL;
 
 	if (portname == NULL)
-		return -1;
+		return -EINVAL;
 
 	msg = tsn_send_cmd_prepare(TSN_CMD_QCI_SGI_SET);
 	if (msg == NULL) {
 		lloge("fail to allocate genl msg.\n");
-		return -1;
+		return -ENOMEM;
 	}
 
 	tsn_send_cmd_append_attr(msg, TSN_ATTR_IFNAME, portname, strlen(portname) + 1);
@@ -611,7 +600,7 @@ int tsn_qci_psfp_sgi_set(char *portname, uint32_t sgi_handle, bool enable,
 
 	if (sgi->admin.gcl == NULL) {
 		lloge("error: list lenghth is not zero, but no gate control list\n");
-		return -1;
+		return -EINVAL;
 	}
 
 	gcl = sgi->admin.gcl;
@@ -622,7 +611,7 @@ int tsn_qci_psfp_sgi_set(char *portname, uint32_t sgi_handle, bool enable,
 
 		if ((gcl + i) == NULL) {
 			lloge("Could not get as many as gate list entry compare control_list_length");
-			return -1;
+			return -EINVAL;
 		}
 
 		entry = tsn_nla_nest_start(msg, TSN_SGI_ATTR_CTRL_GCLENTRY);
@@ -659,12 +648,10 @@ out2:
 	if (ret < 0) {
 		lloge("genl send to kernel error\n");
 		free(msg);
-		return -1;
+		return ret;
 	}
 
-	tsn_msg_recv_analysis(NULL);
-
-	return 0;
+	return tsn_msg_recv_analysis(NULL);
 }
 
 int tsn_qci_psfp_sgi_get(char *portname, uint32_t sgi_handle, struct tsn_qci_psfp_sgi_conf *sgi)
@@ -675,12 +662,12 @@ int tsn_qci_psfp_sgi_get(char *portname, uint32_t sgi_handle, struct tsn_qci_psf
 	struct showtable sgiget;
 
 	if (portname == NULL)
-		return -1;
+		return -EINVAL;
 
 	msg = tsn_send_cmd_prepare(TSN_CMD_QCI_SGI_GET);
 	if (msg == NULL) {
 		lloge("fail to allocate genl msg.\n");
-		return -1;
+		return -ENOMEM;
 	}
 
 	tsn_send_cmd_append_attr(msg, TSN_ATTR_IFNAME, portname, strlen(portname) + 1);
@@ -696,7 +683,7 @@ int tsn_qci_psfp_sgi_get(char *portname, uint32_t sgi_handle, struct tsn_qci_psf
 	ret = tsn_send_to_kernel(msg);
 	if (ret < 0) {
 		lloge("genl send to kernel error\n");
-		return -1;
+		return ret;
 	}
 
 	/* TODO: receive the feedback and return */
@@ -707,13 +694,11 @@ int tsn_qci_psfp_sgi_get(char *portname, uint32_t sgi_handle, struct tsn_qci_psf
 	sgiget.link2 = &qci_sgi_ctrl;
 	sgiget.len3 = TSN_SGI_ATTR_GCL_MAX;
 	sgiget.link3 = qci_sgi_gcl;
-	tsn_msg_recv_analysis(&sgiget);
-
-	return 0;
+	return tsn_msg_recv_analysis(&sgiget);
 
 err:
 	free(msg);
-	return -1;
+	return -EINVAL;
 }
 
 int tsn_qci_psfp_sgi_status_get(char *portname, uint32_t sgi_handle, struct tsn_psfp_sgi_status *sgi)
@@ -724,12 +709,12 @@ int tsn_qci_psfp_sgi_status_get(char *portname, uint32_t sgi_handle, struct tsn_
 	struct showtable sgiget;
 
 	if (portname == NULL)
-		return -1;
+		return -EINVAL;
 
 	msg = tsn_send_cmd_prepare(TSN_CMD_QCI_SGI_GET_STATUS);
 	if (msg == NULL) {
 		lloge("fail to allocate genl msg.\n");
-		return -1;
+		return -ENOMEM;
 	}
 
 	tsn_send_cmd_append_attr(msg, TSN_ATTR_IFNAME, portname, strlen(portname) + 1);
@@ -745,7 +730,7 @@ int tsn_qci_psfp_sgi_status_get(char *portname, uint32_t sgi_handle, struct tsn_
 	ret = tsn_send_to_kernel(msg);
 	if (ret < 0) {
 		lloge("genl send to kernel error\n");
-		return -1;
+		return ret;
 	}
 
 	/* TODO: receive the feedback and return */
@@ -756,13 +741,11 @@ int tsn_qci_psfp_sgi_status_get(char *portname, uint32_t sgi_handle, struct tsn_
 	sgiget.link2 = &qci_sgi_ctrl;
 	sgiget.len3 = TSN_SGI_ATTR_GCL_MAX;
 	sgiget.link3 = qci_sgi_gcl;
-	tsn_msg_recv_analysis(&sgiget);
-
-	return 0;
+	return tsn_msg_recv_analysis(&sgiget);
 
 err:
 	free(msg);
-	return -1;
+	return -EINVAL;
 }
 
 int tsn_qci_psfp_fmi_set(char *portname, uint32_t fmi_id, bool enable, struct tsn_qci_psfp_fmi *fmiconf)
@@ -772,15 +755,15 @@ int tsn_qci_psfp_fmi_set(char *portname, uint32_t fmi_id, bool enable, struct ts
 	int ret;
 
 	if (fmiconf == NULL)
-		return -1;
+		return -EINVAL;
 
 	if (portname == NULL)
-		return -1;
+		return -EINVAL;
 
 	msg = tsn_send_cmd_prepare(TSN_CMD_QCI_FMI_SET);
 	if (msg == NULL) {
 		lloge("fail to allocate genl msg.\n");
-		return -1;
+		return -ENOMEM;
 	}
 
 	tsn_send_cmd_append_attr(msg, TSN_ATTR_IFNAME, portname, strlen(portname) + 1);
@@ -825,16 +808,14 @@ sendmsg:
 	ret = tsn_send_to_kernel(msg);
 	if (ret < 0) {
 		lloge("genl send to kernel error\n");
-		return -1;
+		return ret;
 	}
 
-	tsn_msg_recv_analysis(NULL);
-
-	return 0;
+	return tsn_msg_recv_analysis(NULL);
 
 err:
 	free(msg);
-	return -1;
+	return -EINVAL;
 }
 
 int tsn_qci_psfp_fmi_get(char *portname, uint32_t fmi_id, struct tsn_qci_psfp_fmi *fmiconf)
@@ -845,15 +826,15 @@ int tsn_qci_psfp_fmi_get(char *portname, uint32_t fmi_id, struct tsn_qci_psfp_fm
 	struct showtable linkfmi;
 
 	if (fmiconf == NULL)
-		return -1;
+		return -EINVAL;
 
 	if (portname == NULL)
-		return -1;
+		return -EINVAL;
 
 	msg = tsn_send_cmd_prepare(TSN_CMD_QCI_FMI_GET);
 	if (msg == NULL) {
 		lloge("fail to allocate genl msg.\n");
-		return -1;
+		return -ENOMEM;
 	}
 
 	tsn_send_cmd_append_attr(msg, TSN_ATTR_IFNAME, portname, strlen(portname) + 1);
@@ -869,19 +850,17 @@ int tsn_qci_psfp_fmi_get(char *portname, uint32_t fmi_id, struct tsn_qci_psfp_fm
 	ret = tsn_send_to_kernel(msg);
 	if (ret < 0) {
 		lloge("genl send to kernel error\n");
-		return -1;
+		return ret;
 	}
 
 	linkfmi.type = TSN_ATTR_QCI_FMI; 
 	linkfmi.len1 = TSN_QCI_FMI_ATTR_MAX;
 	linkfmi.link1 = &qci_fmi;
-	tsn_msg_recv_analysis(&linkfmi);
-
-	return 0;
+	return tsn_msg_recv_analysis(&linkfmi);
 
 err:
 	free(msg);
-	return -1;
+	return -EINVAL;
 }
 
 int tsn_qos_port_qbv_set(char *portname, struct tsn_qbv_conf *adminconf, bool enable)
@@ -895,15 +874,15 @@ int tsn_qos_port_qbv_set(char *portname, struct tsn_qbv_conf *adminconf, bool en
 	uint32_t i = 0, count = 0;
 
 	if ((adminconf == NULL) && enable)
-		return -1;
+		return -EINVAL;
 
 	if (portname == NULL)
-		return -1;
+		return -EINVAL;
 
 	msg = tsn_send_cmd_prepare(TSN_CMD_QBV_SET);
 	if (msg == NULL) {
 		lloge("fail to allocate genl msg.\n");
-		return -1;
+		return -ENOMEM;
 	}
 
 	tsn_send_cmd_append_attr(msg, TSN_ATTR_IFNAME, portname, strlen(portname) + 1);
@@ -911,7 +890,7 @@ int tsn_qos_port_qbv_set(char *portname, struct tsn_qbv_conf *adminconf, bool en
 
 	qbv = tsn_nla_nest_start(msg, TSN_ATTR_QBV);
 	if (!qbv)
-		return -1;
+		return -EINVAL;
 
 	/* If disable the port Qbv just send disable ATTR */
 	if (!enable) {
@@ -927,7 +906,7 @@ int tsn_qos_port_qbv_set(char *portname, struct tsn_qbv_conf *adminconf, bool en
 
 	qbvadmin = tsn_nla_nest_start(msg, TSN_QBV_ATTR_ADMINENTRY);
 	if (!qbvadmin)
-		return -1;
+		return -EINVAL;
 
 	if (adminconf->admin.gate_states)
 		tsn_send_cmd_append_attr(msg, TSN_QBV_ATTR_CTRL_GATESTATE, &(adminconf->admin.gate_states),
@@ -954,7 +933,7 @@ int tsn_qos_port_qbv_set(char *portname, struct tsn_qbv_conf *adminconf, bool en
 			llogv("set tsn_nla_nest_start TSN_QBV_ATTR_ADMINENTRY %d\n", i);
 
 			if (!qbv_entry)
-				return -1;
+				return -EINVAL;
 
 			uint8_t gs = (gatelist + i)->gate_state;
 			uint32_t ti = (gatelist + i)->time_interval;
@@ -967,7 +946,7 @@ int tsn_qos_port_qbv_set(char *portname, struct tsn_qbv_conf *adminconf, bool en
 
 			if (count > adminconf->admin.control_list_length) {
 				lloge("entries count bigger than input cnt.\n");
-				return -1;
+				return -EINVAL;
 			}
 
 			tsn_nla_nest_end(msg, qbv_entry);
@@ -995,12 +974,10 @@ sendmsg1:
 	ret = tsn_send_to_kernel(msg);
 	if (ret < 0) {
 		lloge("genl send to kernel error\n");
-		return -1;
+		return ret;
 	}
 
-	tsn_msg_recv_analysis(NULL);
-
-	return 0;
+	return tsn_msg_recv_analysis(NULL);
 }
 
 /* tsn_qos_port_gce_conf_get()
@@ -1016,12 +993,12 @@ int tsn_qos_port_qbv_get(char *portname, struct tsn_qbv_conf *qbvconf)
 	struct showtable qbvget; 
 
 	if (qbvconf == NULL)
-		return -1;
+		return -EINVAL;
 
 	msg = tsn_send_cmd_prepare(TSN_CMD_QBV_GET);
 	if (msg == NULL) {
 		lloge("fail to allocate genl msg.\n");
-		return -1;
+		return -ENOMEM;
 	}
 
 	tsn_send_cmd_append_attr(msg, TSN_ATTR_IFNAME, portname, strlen(portname) + 1);
@@ -1029,7 +1006,7 @@ int tsn_qos_port_qbv_get(char *portname, struct tsn_qbv_conf *qbvconf)
 	ret = tsn_send_to_kernel(msg);
 	if (ret < 0) {
 		lloge("genl send to kernel error\n");
-		return -1;
+		return ret;
 	}
 	/* TODO save to tsn_qbv_conf and admin list */
 	qbvget.type = TSN_ATTR_QBV;
@@ -1040,9 +1017,7 @@ int tsn_qos_port_qbv_get(char *portname, struct tsn_qbv_conf *qbvconf)
 	qbvget.len3 = TSN_QBV_ATTR_ENTRY_MAX;
 	qbvget.link3 = &qbv_entry;
 
-	tsn_msg_recv_analysis(&qbvget);
-
-	return 0;
+	return tsn_msg_recv_analysis(&qbvget);
 }
 
 int tsn_qos_port_qbv_status_get(char *portname, struct tsn_qbv_status *qbvstatus)
@@ -1052,12 +1027,12 @@ int tsn_qos_port_qbv_status_get(char *portname, struct tsn_qbv_status *qbvstatus
 	struct showtable qbvget;
 
 	if (qbvstatus == NULL)
-		return -1;
+		return -EINVAL;
 
 	msg = tsn_send_cmd_prepare(TSN_CMD_QBV_GET_STATUS);
 	if (msg == NULL) {
 		lloge("fail to allocate genl msg.\n");
-		return -1;
+		return -ENOMEM;
 	}
 
 	tsn_send_cmd_append_attr(msg, TSN_ATTR_IFNAME, portname, strlen(portname) + 1);
@@ -1065,7 +1040,7 @@ int tsn_qos_port_qbv_status_get(char *portname, struct tsn_qbv_status *qbvstatus
 	ret = tsn_send_to_kernel(msg);
 	if (ret < 0) {
 		lloge("genl send to kernel error\n");
-		return -1;
+		return ret;
 	}
 	/* TODO save to struct tsn_qbv_status and oper list */
 	qbvget.type = TSN_ATTR_QBV;
@@ -1076,9 +1051,7 @@ int tsn_qos_port_qbv_status_get(char *portname, struct tsn_qbv_status *qbvstatus
 	qbvget.len3 = TSN_QBV_ATTR_ENTRY_MAX;
 	qbvget.link3 = &qbv_entry;
 
-	tsn_msg_recv_analysis(&qbvget);
-
-	return 0;
+	return tsn_msg_recv_analysis(&qbvget);
 }
 
 int tsn_cbs_set(char *portname, uint8_t tc, uint8_t percent)
@@ -1088,12 +1061,12 @@ int tsn_cbs_set(char *portname, uint8_t tc, uint8_t percent)
 	int ret;
 
 	if (portname == NULL)
-		return -1;
+		return -EINVAL;
 
 	msg = tsn_send_cmd_prepare(TSN_CMD_CBS_SET);
 	if (msg == NULL) {
 		lloge("fail to allocate genl msg.\n");
-		return -1;
+		return -ENOMEM;
 	}
 
 	tsn_send_cmd_append_attr(msg, TSN_ATTR_IFNAME, portname, strlen(portname) + 1);
@@ -1101,7 +1074,7 @@ int tsn_cbs_set(char *portname, uint8_t tc, uint8_t percent)
 
 	cbsattr = tsn_nla_nest_start(msg, TSN_ATTR_CBS);
 	if (!cbsattr)
-		return -1;
+		return -EINVAL;
 
 	tsn_send_cmd_append_attr(msg, TSN_CBS_ATTR_TC_INDEX, &tc, sizeof(tc));
 
@@ -1112,11 +1085,10 @@ int tsn_cbs_set(char *portname, uint8_t tc, uint8_t percent)
 	ret = tsn_send_to_kernel(msg);
 	if (ret < 0) {
 		lloge("genl send to kernel error\n");
-		return -1;
+		return ret;
 	}
 
-	tsn_msg_recv_analysis(NULL);
-	return 0;
+	return tsn_msg_recv_analysis(NULL);
 }
 
 int tsn_cbs_get(char *portname, uint8_t tc)
@@ -1126,19 +1098,19 @@ int tsn_cbs_get(char *portname, uint8_t tc)
 	int ret;
 
 	if (portname == NULL)
-		return -1;
+		return -EINVAL;
 
 	msg = tsn_send_cmd_prepare(TSN_CMD_CBS_GET);
 	if (msg == NULL) {
 		lloge("fail to allocate genl msg.\n");
-		return -1;
+		return -ENOMEM;
 	}
 
 	tsn_send_cmd_append_attr(msg, TSN_ATTR_IFNAME, portname, strlen(portname) + 1);
 
 	cbsattr = tsn_nla_nest_start(msg, TSN_ATTR_CBS);
 	if (!cbsattr)
-		return -1;
+		return -EINVAL;
 
 	tsn_send_cmd_append_attr(msg, TSN_CBS_ATTR_TC_INDEX, &tc, sizeof(tc));
 
@@ -1147,11 +1119,10 @@ int tsn_cbs_get(char *portname, uint8_t tc)
 	ret = tsn_send_to_kernel(msg);
 	if (ret < 0) {
 		lloge("genl send to kernel error\n");
-		return -1;
+		return ret;
 	}
 
-	tsn_msg_recv_analysis(NULL);
-	return 0;
+	return tsn_msg_recv_analysis(NULL);
 }
 
 int tsn_tsd_set(char *portname, bool enable, uint32_t period, uint32_t frame_num, bool imme)
@@ -1161,12 +1132,12 @@ int tsn_tsd_set(char *portname, bool enable, uint32_t period, uint32_t frame_num
 	int ret;
 
 	if (portname == NULL)
-		return -1;
+		return -EINVAL;
 
 	msg = tsn_send_cmd_prepare(TSN_CMD_TSD_SET);
 	if (msg == NULL) {
 		lloge("fail to allocate genl msg.\n");
-		return -1;
+		return -ENOMEM;
 	}
 
 	tsn_send_cmd_append_attr(msg, TSN_ATTR_IFNAME, portname, strlen(portname) + 1);
@@ -1174,7 +1145,7 @@ int tsn_tsd_set(char *portname, bool enable, uint32_t period, uint32_t frame_num
 
 	cbsattr = tsn_nla_nest_start(msg, TSN_ATTR_TSD);
 	if (!cbsattr)
-		return -1;
+		return -EINVAL;
 
 	if (enable) {
 		tsn_send_cmd_append_attr(msg, TSN_TSD_ATTR_ENABLE, &enable, 0);
@@ -1192,44 +1163,43 @@ int tsn_tsd_set(char *portname, bool enable, uint32_t period, uint32_t frame_num
 	ret = tsn_send_to_kernel(msg);
 	if (ret < 0) {
 		lloge("genl send to kernel error\n");
-		return -1;
+		return ret;
 	}
 
-	tsn_msg_recv_analysis(NULL);
-	return 0;
+	return tsn_msg_recv_analysis(NULL);
 }
 
 int tsn_tsd_get(char *portname)
 {
 	struct msgtemplate *msg;
-		struct nlattr *cbsattr;
-		int ret;
+	struct nlattr *cbsattr;
+	int ret;
 
-		if (portname == NULL)
-			return -1;
+	if (portname == NULL)
+		return -EINVAL;
 
-		msg = tsn_send_cmd_prepare(TSN_CMD_TSD_GET);
-		if (msg == NULL) {
-			lloge("fail to allocate genl msg.\n");
-			return -1;
-		}
+	msg = tsn_send_cmd_prepare(TSN_CMD_TSD_GET);
+	if (msg == NULL) {
+		lloge("fail to allocate genl msg.\n");
+		return -ENOMEM;
+	}
 
-		tsn_send_cmd_append_attr(msg, TSN_ATTR_IFNAME, portname, strlen(portname) + 1);
+	tsn_send_cmd_append_attr(msg, TSN_ATTR_IFNAME,
+				 portname, strlen(portname) + 1);
 
-		cbsattr = tsn_nla_nest_start(msg, TSN_ATTR_TSD);
-		if (!cbsattr)
-			return -1;
+	cbsattr = tsn_nla_nest_start(msg, TSN_ATTR_TSD);
+	if (!cbsattr)
+		return -EINVAL;
 
-		tsn_nla_nest_end(msg, cbsattr);
+	tsn_nla_nest_end(msg, cbsattr);
 
-		ret = tsn_send_to_kernel(msg);
-		if (ret < 0) {
-			lloge("genl send to kernel error\n");
-			return -1;
-		}
+	ret = tsn_send_to_kernel(msg);
+	if (ret < 0) {
+		lloge("genl send to kernel error\n");
+		return ret;
+	}
 
-		tsn_msg_recv_analysis(NULL);
-		return 0;
+	return tsn_msg_recv_analysis(NULL);
 }
 
 int tsn_qbu_set(char *portname, uint8_t pt_vector)
@@ -1239,12 +1209,12 @@ int tsn_qbu_set(char *portname, uint8_t pt_vector)
 	int ret;
 
 	if (portname == NULL)
-		return -1;
+		return -EINVAL;
 
 	msg = tsn_send_cmd_prepare(TSN_CMD_QBU_SET);
 	if (msg == NULL) {
 		lloge("fail to allocate genl msg.\n");
-		return -1;
+		return -ENOMEM;
 	}
 
 	tsn_send_cmd_append_attr(msg, TSN_ATTR_IFNAME, portname, strlen(portname) + 1);
@@ -1252,7 +1222,7 @@ int tsn_qbu_set(char *portname, uint8_t pt_vector)
 
 	qbuattr = tsn_nla_nest_start(msg, TSN_ATTR_QBU);
 	if (!qbuattr)
-		return -1;
+		return -EINVAL;
 
 	tsn_send_cmd_append_attr(msg, TSN_QBU_ATTR_ADMIN_STATE, &pt_vector, sizeof(pt_vector));
 
@@ -1261,11 +1231,10 @@ int tsn_qbu_set(char *portname, uint8_t pt_vector)
 	ret = tsn_send_to_kernel(msg);
 	if (ret < 0) {
 		lloge("genl send to kernel error\n");
-		return -1;
+		return ret;
 	}
 
-	tsn_msg_recv_analysis(NULL);
-	return 0;
+	return tsn_msg_recv_analysis(NULL);
 }
 
 int tsn_qbu_get_status(char *portname, struct tsn_preempt_status *pts)
@@ -1274,12 +1243,12 @@ int tsn_qbu_get_status(char *portname, struct tsn_preempt_status *pts)
 	int ret;
 
 	if (portname == NULL)
-		return -1;
+		return -EINVAL;
 
 	msg = tsn_send_cmd_prepare(TSN_CMD_QBU_GET_STATUS);
 	if (msg == NULL) {
 		lloge("fail to allocate genl msg.\n");
-		return -1;
+		return -ENOMEM;
 	}
 
 	tsn_send_cmd_append_attr(msg, TSN_ATTR_IFNAME, portname, strlen(portname) + 1);
@@ -1287,11 +1256,10 @@ int tsn_qbu_get_status(char *portname, struct tsn_preempt_status *pts)
 	ret = tsn_send_to_kernel(msg);
 	if (ret < 0) {
 		lloge("genl send to kernel error\n");
-		return -1;
+		return ret;
 	}
 
-	tsn_msg_recv_analysis(NULL);
-	return 0;
+	return tsn_msg_recv_analysis(NULL);
 }
 
 int tsn_ct_set(char *portname, uint8_t pt_vector)
@@ -1301,12 +1269,12 @@ int tsn_ct_set(char *portname, uint8_t pt_vector)
 	int ret;
 
 	if (portname == NULL)
-		return -1;
+		return -EINVAL;
 
 	msg = tsn_send_cmd_prepare(TSN_CMD_CT_SET);
 	if (msg == NULL) {
 		lloge("fail to allocate genl msg.\n");
-		return -1;
+		return -ENOMEM;
 	}
 
 	tsn_send_cmd_append_attr(msg, TSN_ATTR_IFNAME, portname, strlen(portname) + 1);
@@ -1314,7 +1282,7 @@ int tsn_ct_set(char *portname, uint8_t pt_vector)
 
 	ctattr = tsn_nla_nest_start(msg, TSN_ATTR_CT);
 	if (!ctattr)
-		return -1;
+		return -EINVAL;
 
 	tsn_send_cmd_append_attr(msg, TSN_CT_ATTR_QUEUE_STATE, &pt_vector, sizeof(pt_vector));
 
@@ -1323,11 +1291,10 @@ int tsn_ct_set(char *portname, uint8_t pt_vector)
 	ret = tsn_send_to_kernel(msg);
 	if (ret < 0) {
 		lloge("genl send to kernel error\n");
-		return -1;
+		return ret;
 	}
 
-	tsn_msg_recv_analysis(NULL);
-	return 0;
+	return tsn_msg_recv_analysis(NULL);
 }
 
 int tsn_cbgen_set(char *portname, uint32_t index,
@@ -1338,12 +1305,12 @@ int tsn_cbgen_set(char *portname, uint32_t index,
 	int ret;
 
 	if (portname == NULL)
-		return -1;
+		return -EINVAL;
 
 	msg = tsn_send_cmd_prepare(TSN_CMD_CBGEN_SET);
 	if (msg == NULL) {
 		lloge("fail to allocate genl msg.\n");
-		return -1;
+		return -ENOMEM;
 	}
 
 	tsn_send_cmd_append_attr(msg, TSN_ATTR_IFNAME, portname, strlen(portname) + 1);
@@ -1351,7 +1318,7 @@ int tsn_cbgen_set(char *portname, uint32_t index,
 
 	cbgenattr = tsn_nla_nest_start(msg, TSN_ATTR_CBGEN);
 	if (!cbgenattr)
-		return -1;
+		return -EINVAL;
 
 	tsn_send_cmd_append_attr(msg, TSN_CBGEN_ATTR_INDEX, &index, sizeof(index));
 
@@ -1368,11 +1335,10 @@ int tsn_cbgen_set(char *portname, uint32_t index,
 	ret = tsn_send_to_kernel(msg);
 	if (ret < 0) {
 		lloge("genl send to kernel error\n");
-		return -1;
+		return ret;
 	}
 
-	tsn_msg_recv_analysis(NULL);
-	return 0;
+	return tsn_msg_recv_analysis(NULL);
 }
 
 int tsn_cbrec_set(char *portname, uint32_t index,
@@ -1383,12 +1349,12 @@ int tsn_cbrec_set(char *portname, uint32_t index,
 	int ret;
 
 	if (portname == NULL)
-		return -1;
+		return -EINVAL;
 
 	msg = tsn_send_cmd_prepare(TSN_CMD_CBREC_SET);
 	if (msg == NULL) {
 		lloge("fail to allocate genl msg.\n");
-		return -1;
+		return -ENOMEM;
 	}
 
 	tsn_send_cmd_append_attr(msg, TSN_ATTR_IFNAME, portname, strlen(portname) + 1);
@@ -1396,7 +1362,7 @@ int tsn_cbrec_set(char *portname, uint32_t index,
 
 	cbrecattr = tsn_nla_nest_start(msg, TSN_ATTR_CBREC);
 	if (!cbrecattr)
-		return -1;
+		return -EINVAL;
 
 	tsn_send_cmd_append_attr(msg, TSN_CBREC_ATTR_INDEX, &index, sizeof(index));
 
@@ -1412,11 +1378,10 @@ int tsn_cbrec_set(char *portname, uint32_t index,
 	ret = tsn_send_to_kernel(msg);
 	if (ret < 0) {
 		lloge("genl send to kernel error\n");
-		return -1;
+		return ret;
 	}
 
-	tsn_msg_recv_analysis(NULL);
-	return 0;
+	return tsn_msg_recv_analysis(NULL);
 }
 
 int tsn_cbstatus_get(char *portname, uint32_t index,
@@ -1428,12 +1393,12 @@ int tsn_cbstatus_get(char *portname, uint32_t index,
 	struct showtable cbstatget;
 
 	if (portname == NULL)
-		return -1;
+		return -EINVAL;
 
 	msg = tsn_send_cmd_prepare(TSN_CMD_CBSTAT_GET);
 	if (msg == NULL) {
 		lloge("fail to allocate genl msg.\n");
-		return -1;
+		return -ENOMEM;
 	}
 
 	tsn_send_cmd_append_attr(msg, TSN_ATTR_IFNAME, portname, strlen(portname) + 1);
@@ -1449,7 +1414,7 @@ int tsn_cbstatus_get(char *portname, uint32_t index,
 	ret = tsn_send_to_kernel(msg);
 	if (ret < 0) {
 		lloge("genl send to kernel error\n");
-		return -1;
+		return ret;
 	}
 
 	/* TODO: receive the feedback and return */
@@ -1458,13 +1423,10 @@ int tsn_cbstatus_get(char *portname, uint32_t index,
 	cbstatget.link1 = &cb_get;
 	cbstatget.len2 = 0;
 	cbstatget.len3 = 0;
-	tsn_msg_recv_analysis(&cbstatget);
-
-	return 0;
-
+	return tsn_msg_recv_analysis(&cbstatget);
 err:
 	free(msg);
-	return -1;
+	return -EINVAL;
 }
 
 int tsn_dscp_set(char *portname, bool disable, int index,
@@ -1475,12 +1437,12 @@ int tsn_dscp_set(char *portname, bool disable, int index,
 	int ret;
 
 	if (portname == NULL)
-		return -1;
+		return -EINVAL;
 
 	msg = tsn_send_cmd_prepare(TSN_CMD_DSCP_SET);
 	if (msg == NULL) {
 		lloge("fail to allocate genl msg.\n");
-		return -1;
+		return -ENOMEM;
 	}
 
 	tsn_send_cmd_append_attr(msg, TSN_ATTR_IFNAME, portname, strlen(portname) + 1);
@@ -1488,7 +1450,7 @@ int tsn_dscp_set(char *portname, bool disable, int index,
 
 	dscpattr = tsn_nla_nest_start(msg, TSN_ATTR_DSCP);
 	if (!dscpattr)
-		return -1;
+		return -EINVAL;
 
 	tsn_send_cmd_append_attr(msg, TSN_DSCP_ATTR_INDEX, &index, sizeof(index));
 	if (disable)
@@ -1505,9 +1467,8 @@ int tsn_dscp_set(char *portname, bool disable, int index,
 	ret = tsn_send_to_kernel(msg);
 	if (ret < 0) {
 		lloge("genl send to kernel error\n");
-		return -1;
+		return ret;
 	}
 
-	tsn_msg_recv_analysis(NULL);
-	return 0;
+	return tsn_msg_recv_analysis(NULL);
 }
