@@ -12,6 +12,7 @@
 #include <linux/netlink.h>
 #include <linux/genetlink.h>
 #include <time.h>
+#include <cjson/cJSON.h>
 
 #define MAX_MSGSIZE 256
 #ifndef SOL_NETLINK
@@ -331,6 +332,16 @@ struct showtable {
 	int len3;
 	struct linkpara *link3;
 };
+
+struct tsn_cap {
+	bool qbv;
+	bool qci;
+	bool qbu;
+	bool cbs;
+	bool cb;
+	bool tbs;
+	bool cut_through;
+};
 /*
  * Generic macros for dealing with netlink sockets. Might be duplicated
  * elsewhere. It is recommended that commercial grade applications use
@@ -392,16 +403,18 @@ static inline int tsn_nla_nest_end(struct msgtemplate *msg, struct nlattr *start
 struct msgtemplate *tsn_send_cmd_prepare(__u8 genl_cmd);
 void tsn_send_cmd_append_attr(struct msgtemplate *msg, __u16 nla_type, void *nla_data, int nla_len);
 int tsn_send_to_kernel(struct msgtemplate *msg);
-int tsn_msg_recv_analysis(struct showtable *linkdata);
+int tsn_msg_recv_analysis(struct showtable *linkdata, void *para);
 
 int genl_tsn_init(void);
 void genl_tsn_close(void);
 int tsn_echo_test(char *string, int data);
 
+int tsn_capability_get(char *portname, struct tsn_cap *cap);
 int tsn_qos_port_qbv_set(char *portname, struct tsn_qbv_conf *adminconf, bool enable);
 int tsn_qos_port_qbv_get(char *portname, struct tsn_qbv_conf *qbvconf);
 int tsn_qos_port_qbv_status_get(char *portname, struct tsn_qbv_status *qbvstaus);
-int tsn_qci_streampara_get(struct tsn_qci_psfp_stream_param *sp);
+int tsn_qci_streampara_get(char *portname,
+				      struct tsn_qci_psfp_stream_param *sp);
 int tsn_cb_streamid_set(char *portname, uint32_t sid_index, bool enable,
 		struct tsn_cb_streamid *sid);
 int tsn_cb_streamid_get(char *portname, uint32_t sid_index, struct tsn_cb_streamid *sid);
@@ -437,4 +450,6 @@ pthread_t *create_alarm_common(uint64_t ts, uint32_t offset, uint32_t cycle,
 			      void (*callback_func)(void *data), void *data);
 int delete_alarm_common(pthread_t *thread);
 int wait_tsn_multicast();
+void get_para_from_json(int type, cJSON *json, void *para);
+
 #endif /* _TSN_GENETLINK_KERN_H */

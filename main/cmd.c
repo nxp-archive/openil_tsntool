@@ -69,6 +69,20 @@ struct cli_cmd cli_commands[] = {
 			{0, 0, 0, 0}
 		}
 	},
+	{ "tsncapget", cli_cmd_tsn_cap_get, "get tsn capability ",
+		{
+			{"help", 0, 0, 'h'},
+			{"device", 1, 0, 'd' },
+			{0, 0, 0, 0}
+		}
+	},
+	{ "qcicapget", cli_cmd_qci_cap_get, "get stream parameters ",
+		{
+			{"help", 0, 0, 'h'},
+			{"device", 1, 0, 'd' },
+			{0, 0, 0, 0}
+		}
+	},
 	{ "qbvset", cli_cmd_qbv_set, "set time gate scheduling config for <ifname>",
 		{
 			{"help", 0, 0, 'h'},
@@ -426,6 +440,96 @@ uint64_t get_seconds_time(char *optbuf)
 	}
 
 	return basetime;
+}
+
+static void cmd_tsn_cap_get_help(void)
+{
+	printf(" tsncapget\n\t\t\t--device <ifname>\n\t\t\t--help\n\n");
+}
+
+int cli_cmd_tsn_cap_get(UNUSED int argc, UNUSED char *argv[],
+					 UNUSED int cmdnumber)
+{
+	int c;
+	int ret = 0;
+	int device = 0;
+	struct option *long_options = &cli_commands[cmdnumber].long_options[0];
+	int option_index = 0;
+	char portname[IF_NAMESIZE];
+
+	optind = 0;
+
+	while ((c = getopt_long(argc, argv, "d:h", long_options, &option_index)
+		) != -1) {
+		switch (c) {
+		case 'd':
+			strcpy(portname, optarg);
+			logv("device is %s\n", portname);
+			device = 1;
+			break;
+		case 'h':
+			cmd_tsn_cap_get_help();
+			return 0;
+		default:
+			cmd_tsn_cap_get_help();
+			return -EINVAL;
+		}
+	}
+
+	if (!device) {
+		/* Get all the devices with qbv capability */
+		loge("--device could not be NULL.\n");
+		ret = -EINVAL;
+	} else {
+		ret = fill_tsn_cap_get(portname);
+	}
+
+	return ret;
+}
+
+static void cmd_qci_str_para_get_help(void)
+{
+	printf(" qcicapget\n\t\t\t--device <ifname>\n\t\t\t--help\n\n");
+}
+
+int cli_cmd_qci_cap_get(UNUSED int argc, UNUSED char *argv[],
+					 UNUSED int cmdnumber)
+{
+	int c;
+	int ret = 0;
+	int device = 0;
+	struct option *long_options = &cli_commands[cmdnumber].long_options[0];
+	int option_index = 0;
+	char portname[IF_NAMESIZE];
+
+	optind = 0;
+
+	while ((c = getopt_long(argc, argv, "d:h", long_options, &option_index)
+		) != -1) {
+		switch (c) {
+		case 'd':
+			strcpy(portname, optarg);
+			logv("device is %s\n", portname);
+			device = 1;
+			break;
+		case 'h':
+			cmd_qci_str_para_get_help();
+			return 0;
+		default:
+			cmd_qci_str_para_get_help();
+			return -EINVAL;
+		}
+	}
+
+	if (!device) {
+		/* Get all the devices with qbv capability */
+		loge("--device could not be NULL.\n");
+		ret = -EINVAL;
+	} else {
+		ret = fill_qci_cap_get(portname);
+	}
+
+	return ret;
 }
 
 static void cmd_qbvset_help(void)

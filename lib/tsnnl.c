@@ -11,6 +11,16 @@
 #include "tsn/genl_tsn.h"
 #include <errno.h>
 
+struct linkpara tsn_cap_para[TSN_CAP_ATTR_MAX + 1] = {
+	[TSN_CAP_ATTR_QBV]	= {NLA_FLAG, 2, "Qbv" },
+	[TSN_CAP_ATTR_QCI]	= {NLA_FLAG, 2, "Qci" },
+	[TSN_CAP_ATTR_QBU]	= {NLA_FLAG, 2, "Qbu" },
+	[TSN_CAP_ATTR_CBS]	= {NLA_FLAG, 2, "Qav Credit-based Shapter" },
+	[TSN_CAP_ATTR_CB]	= {NLA_FLAG, 2, "8021CB" },
+	[TSN_CAP_ATTR_TBS]	= {NLA_FLAG, 2, "time based schedule" },
+	[TSN_CAP_ATTR_CTH]	= {NLA_FLAG, 2, "cut through forward" },
+};
+
 struct linkpara qbv_base[TSN_QBV_ATTR_MAX + 1] = {
 	[TSN_QBV_ATTR_CONFIGCHANGE]			= {0,0,0},
 	[TSN_QBV_ATTR_GRANULARITY]			= {0,0,0},
@@ -76,6 +86,16 @@ struct linkpara qci_sfi[TSN_QCI_SFI_ATTR_MAX + 1] = {
 	[TSN_QCI_SFI_ATTR_COUNTERS]		= { __NLA_TYPE_MAX + 10, sizeof(struct tsn_qci_psfp_sfi_counters), "\nmatch   pass   gate_drop   sdu_pass   sdu_drop   red\n"},
 	[TSN_QCI_SFI_ATTR_OVERSIZE_ENABLE]	= { NLA_FLAG, 2, "oversize enable"},
 	[TSN_QCI_SFI_ATTR_OVERSIZE]		= { NLA_FLAG, 2, "oversize"},
+};
+
+struct linkpara qci_stream_para[TSN_QCI_STREAM_ATTR_MAX + 1] = {
+	 [TSN_QCI_STREAM_ATTR_MAX_SFI]	= { NLA_U32, 3,
+					"max stream filter instances"},
+	 [TSN_QCI_STREAM_ATTR_MAX_SGI]	= { NLA_U32, 3,
+					"max stream gate instances"},
+	 [TSN_QCI_STREAM_ATTR_MAX_FMI]	= { NLA_U32, 3,
+					"max flow meter instances"},
+	 [TSN_QCI_STREAM_ATTR_SLM]	= { NLA_U32, 3, "supported list max"},
 };
 
 #if 0
@@ -152,10 +172,198 @@ struct linkpara cb_get[TSN_CBSTAT_ATTR_MAX + 1] = {
 	[TSN_CBSTAT_ATTR_SEQ_HIS]	= { NLA_U32, 3, "seq_history"},
 };
 
-int tsn_qci_streampara_get(struct tsn_qci_psfp_stream_param *sp)
+static void get_tsn_cap_para_from_json(cJSON *json, void *para)
 {
-	return -EINVAL;
+	cJSON *item;
+	struct tsn_cap *cap;
+	int index;
+
+	cap = (struct tsn_cap_para *)para;
+
+	item = cJSON_GetObjectItem(json, tsn_cap_para[TSN_CAP_ATTR_QBV].name);
+	if (item)
+		cap->qbv = 1;
+
+	item = cJSON_GetObjectItem(json, tsn_cap_para[TSN_CAP_ATTR_QCI].name);
+	if (item)
+		cap->qci = 1;
+
+	item = cJSON_GetObjectItem(json, tsn_cap_para[TSN_CAP_ATTR_QBU].name);
+	if (item)
+		cap->qbu = 1;
+
+	item = cJSON_GetObjectItem(json, tsn_cap_para[TSN_CAP_ATTR_CBS].name);
+	if (item)
+		cap->cbs = 1;
+
+	item = cJSON_GetObjectItem(json, tsn_cap_para[TSN_CAP_ATTR_CB].name);
+	if (item)
+		cap->cb = 1;
+
+	item = cJSON_GetObjectItem(json, tsn_cap_para[TSN_CAP_ATTR_TBS].name);
+	if (item)
+		cap->tbs = 1;
+
+	item = cJSON_GetObjectItem(json, tsn_cap_para[TSN_CAP_ATTR_CTH].name);
+	if (item)
+		cap->cut_through = 1;
 }
+
+static void get_qci_cap_para_from_json(cJSON *json, void *para)
+{
+	cJSON *item;
+	char *name;
+	struct tsn_qci_psfp_stream_param *sp;
+
+	sp = (struct tsn_qci_psfp_stream_param *)para;
+
+	name = qci_stream_para[TSN_QCI_STREAM_ATTR_MAX_SFI].name;
+	item = cJSON_GetObjectItem(json, name);
+	if (item)
+		sp->max_sf_instance = (int32_t)(item->valuedouble);
+
+	name = qci_stream_para[TSN_QCI_STREAM_ATTR_MAX_SGI].name;
+	item = cJSON_GetObjectItem(json, name);
+	if (item)
+		sp->max_sg_instance = (int32_t)(item->valuedouble);
+
+	name = qci_stream_para[TSN_QCI_STREAM_ATTR_MAX_FMI].name;
+	item = cJSON_GetObjectItem(json, name);
+	if (item)
+		sp->max_fm_instance = (int32_t)(item->valuedouble);
+
+	name = qci_stream_para[TSN_QCI_STREAM_ATTR_SLM].name;
+	item = cJSON_GetObjectItem(json, name);
+	if (item)
+		sp->supported_list_max = (int32_t)(item->valuedouble);
+}
+
+void get_para_from_json(int type, cJSON *json, void *para)
+{
+	switch (type) {
+	case TSN_ATTR_QBV:
+	case TSN_ATTR_STREAM_IDENTIFY:
+		break;
+	case TSN_ATTR_CAP:
+		get_tsn_cap_para_from_json(json, para);
+	case TSN_ATTR_QCI_SP:
+		get_qci_cap_para_from_json(json, para);
+		break;
+	case TSN_ATTR_QCI_SFI:
+	case TSN_ATTR_QCI_SGI:
+	case TSN_ATTR_QCI_FMI:
+	case TSN_ATTR_CBS:
+	case TSN_ATTR_QBU:
+	case TSN_ATTR_TSD:
+	case TSN_ATTR_CT:
+	case TSN_ATTR_CBGEN:
+	case TSN_ATTR_CBREC:
+	case TSN_ATTR_CBSTAT:
+	case TSN_ATTR_DSCP:
+	case SWITCH_ATTR_ACL:
+		break;
+	default:
+		break;
+	}
+}
+
+
+/* tsn_capability_get()
+ * To get the device's tsn capabilities
+ * portname: port name of the net device
+ * cap: pointer of tsn-capability, it is output parameter
+
+ * return: < 0 error, 0 is ok
+ */
+int tsn_capability_get(char *portname, struct tsn_cap *cap)
+{
+	struct msgtemplate *msg;
+	struct nlattr *stream_para_attr;
+	int ret;
+	struct showtable stream_para;
+
+	if (portname == NULL)
+		return -EINVAL;
+
+	msg = tsn_send_cmd_prepare(TSN_CMD_CAP_GET);
+	if (msg == NULL) {
+		lloge("fail to allocate genl msg.\n");
+		return -ENOMEM;
+	}
+
+	tsn_send_cmd_append_attr(msg, TSN_ATTR_IFNAME, portname,
+				 strlen(portname) + 1);
+
+
+	ret = tsn_send_to_kernel(msg);
+	if (ret < 0) {
+		lloge("genl send to kernel error\n");
+		return ret;
+	}
+
+	/* TODO: receive the feedback and return */
+	stream_para.type = TSN_CMD_CAP_GET;
+	stream_para.len1 = TSN_CAP_ATTR_MAX;
+	stream_para.link1 = &tsn_cap_para;
+	stream_para.len2 = 0;
+	stream_para.link2 = 0;
+	stream_para.len3 = 0;
+	stream_para.link3 = 0;
+	return tsn_msg_recv_analysis(&stream_para, (void *)cap);
+
+err:
+	free(msg);
+	return ret;
+}
+
+/* tsn_qci_streampara_get()
+ * To get the stream parameter as spec 802.1Qci clause 12.31.1
+ * portname: port name of the net device
+ * sp: pointer of stream parameter struct, it is output parameter
+
+ * return: < 0 error, 0 is ok
+ */
+int tsn_qci_streampara_get(char *portname,
+				      struct tsn_qci_psfp_stream_param *sp)
+{
+	struct msgtemplate *msg;
+	struct nlattr *stream_para_attr;
+	int ret;
+	struct showtable stream_para;
+
+	if (portname == NULL)
+		return -EINVAL;
+
+	msg = tsn_send_cmd_prepare(TSN_CMD_QCI_CAP_GET);
+	if (msg == NULL) {
+		lloge("fail to allocate genl msg.\n");
+		return -ENOMEM;
+	}
+
+	tsn_send_cmd_append_attr(msg, TSN_ATTR_IFNAME, portname,
+				 strlen(portname) + 1);
+
+	ret = tsn_send_to_kernel(msg);
+	if (ret < 0) {
+		lloge("genl send to kernel error\n");
+		return ret;
+	}
+
+	/* TODO: receive the feedback and return */
+	stream_para.type = TSN_ATTR_QCI_SP;
+	stream_para.len1 = TSN_QCI_STREAM_ATTR_MAX;
+	stream_para.link1 = &qci_stream_para;
+	stream_para.len2 = 0;
+	stream_para.link2 = 0;
+	stream_para.len3 = 0;
+	stream_para.link3 = 0;
+	return tsn_msg_recv_analysis(&stream_para, (void *)sp);
+
+err:
+	free(msg);
+	return ret;
+}
+
 
 /* tsn_cb_streamid_set()
  * To set the stream identify status as spec 8021CB clause 6
@@ -255,7 +463,7 @@ sendmsg1:
 		return ret;
 	}
 
-	return tsn_msg_recv_analysis(NULL);
+	return tsn_msg_recv_analysis(NULL, NULL);
 err:
 	free(msg);
 	return -EINVAL;
@@ -312,7 +520,7 @@ int tsn_cb_streamid_get(char *portname, uint32_t sid_index, struct tsn_cb_stream
 	streamidget.link1 = &cb_streamid;
 	streamidget.len2 = 0;
 	streamidget.len3 = 0;
-	return tsn_msg_recv_analysis(&streamidget);
+	return tsn_msg_recv_analysis(&streamidget, (void *)sid);
 
 err:
 	free(msg);
@@ -406,7 +614,7 @@ sendmsg1:
 		return ret;
 	}
 
-	return tsn_msg_recv_analysis(NULL);
+	return tsn_msg_recv_analysis(NULL, NULL);
 
 err:
 	free(msg);
@@ -464,7 +672,7 @@ int tsn_qci_psfp_sfi_get(char *portname, uint32_t sfi_handle,
 	sfiget.link1 = &qci_sfi;
 	sfiget.len2 = 0;
 	sfiget.len3 = 0;
-	return tsn_msg_recv_analysis(&sfiget);
+	return tsn_msg_recv_analysis(&sfiget, (void *)sfi);
 err:
 	free(msg);
 	return -EINVAL;
@@ -514,7 +722,7 @@ int tsn_qci_psfp_sfi_counters_get(char *portname, uint32_t sfi_handle,
 	}
 
 	/* TODO: receive the feedback and return */
-	return tsn_msg_recv_analysis(NULL);
+	return tsn_msg_recv_analysis(NULL, (void *)sfic);
 
 err:
 	free(msg);
@@ -651,7 +859,7 @@ out2:
 		return ret;
 	}
 
-	return tsn_msg_recv_analysis(NULL);
+	return tsn_msg_recv_analysis(NULL, NULL);
 }
 
 int tsn_qci_psfp_sgi_get(char *portname, uint32_t sgi_handle, struct tsn_qci_psfp_sgi_conf *sgi)
@@ -694,7 +902,7 @@ int tsn_qci_psfp_sgi_get(char *portname, uint32_t sgi_handle, struct tsn_qci_psf
 	sgiget.link2 = &qci_sgi_ctrl;
 	sgiget.len3 = TSN_SGI_ATTR_GCL_MAX;
 	sgiget.link3 = qci_sgi_gcl;
-	return tsn_msg_recv_analysis(&sgiget);
+	return tsn_msg_recv_analysis(&sgiget, (void *)sgi);
 
 err:
 	free(msg);
@@ -741,7 +949,7 @@ int tsn_qci_psfp_sgi_status_get(char *portname, uint32_t sgi_handle, struct tsn_
 	sgiget.link2 = &qci_sgi_ctrl;
 	sgiget.len3 = TSN_SGI_ATTR_GCL_MAX;
 	sgiget.link3 = qci_sgi_gcl;
-	return tsn_msg_recv_analysis(&sgiget);
+	return tsn_msg_recv_analysis(&sgiget, (void *)sgi);
 
 err:
 	free(msg);
@@ -811,7 +1019,7 @@ sendmsg:
 		return ret;
 	}
 
-	return tsn_msg_recv_analysis(NULL);
+	return tsn_msg_recv_analysis(NULL, NULL);
 
 err:
 	free(msg);
@@ -856,7 +1064,7 @@ int tsn_qci_psfp_fmi_get(char *portname, uint32_t fmi_id, struct tsn_qci_psfp_fm
 	linkfmi.type = TSN_ATTR_QCI_FMI; 
 	linkfmi.len1 = TSN_QCI_FMI_ATTR_MAX;
 	linkfmi.link1 = &qci_fmi;
-	return tsn_msg_recv_analysis(&linkfmi);
+	return tsn_msg_recv_analysis(&linkfmi, (void *)fmiconf);
 
 err:
 	free(msg);
@@ -977,7 +1185,7 @@ sendmsg1:
 		return ret;
 	}
 
-	return tsn_msg_recv_analysis(NULL);
+	return tsn_msg_recv_analysis(NULL, NULL);
 }
 
 /* tsn_qos_port_gce_conf_get()
@@ -1017,7 +1225,7 @@ int tsn_qos_port_qbv_get(char *portname, struct tsn_qbv_conf *qbvconf)
 	qbvget.len3 = TSN_QBV_ATTR_ENTRY_MAX;
 	qbvget.link3 = &qbv_entry;
 
-	return tsn_msg_recv_analysis(&qbvget);
+	return tsn_msg_recv_analysis(&qbvget, (void *)qbvconf);
 }
 
 int tsn_qos_port_qbv_status_get(char *portname, struct tsn_qbv_status *qbvstatus)
@@ -1051,7 +1259,7 @@ int tsn_qos_port_qbv_status_get(char *portname, struct tsn_qbv_status *qbvstatus
 	qbvget.len3 = TSN_QBV_ATTR_ENTRY_MAX;
 	qbvget.link3 = &qbv_entry;
 
-	return tsn_msg_recv_analysis(&qbvget);
+	return tsn_msg_recv_analysis(&qbvget, (void *)qbvstatus);
 }
 
 int tsn_cbs_set(char *portname, uint8_t tc, uint8_t percent)
@@ -1088,7 +1296,7 @@ int tsn_cbs_set(char *portname, uint8_t tc, uint8_t percent)
 		return ret;
 	}
 
-	return tsn_msg_recv_analysis(NULL);
+	return tsn_msg_recv_analysis(NULL, NULL);
 }
 
 int tsn_cbs_get(char *portname, uint8_t tc)
@@ -1122,7 +1330,7 @@ int tsn_cbs_get(char *portname, uint8_t tc)
 		return ret;
 	}
 
-	return tsn_msg_recv_analysis(NULL);
+	return tsn_msg_recv_analysis(NULL, NULL);
 }
 
 int tsn_tsd_set(char *portname, bool enable, uint32_t period, uint32_t frame_num, bool imme)
@@ -1166,7 +1374,7 @@ int tsn_tsd_set(char *portname, bool enable, uint32_t period, uint32_t frame_num
 		return ret;
 	}
 
-	return tsn_msg_recv_analysis(NULL);
+	return tsn_msg_recv_analysis(NULL, NULL);
 }
 
 int tsn_tsd_get(char *portname)
@@ -1199,7 +1407,7 @@ int tsn_tsd_get(char *portname)
 		return ret;
 	}
 
-	return tsn_msg_recv_analysis(NULL);
+	return tsn_msg_recv_analysis(NULL, NULL);
 }
 
 int tsn_qbu_set(char *portname, uint8_t pt_vector)
@@ -1234,7 +1442,7 @@ int tsn_qbu_set(char *portname, uint8_t pt_vector)
 		return ret;
 	}
 
-	return tsn_msg_recv_analysis(NULL);
+	return tsn_msg_recv_analysis(NULL, NULL);
 }
 
 int tsn_qbu_get_status(char *portname, struct tsn_preempt_status *pts)
@@ -1259,7 +1467,7 @@ int tsn_qbu_get_status(char *portname, struct tsn_preempt_status *pts)
 		return ret;
 	}
 
-	return tsn_msg_recv_analysis(NULL);
+	return tsn_msg_recv_analysis(NULL, (void *)pts);
 }
 
 int tsn_ct_set(char *portname, uint8_t pt_vector)
@@ -1294,7 +1502,7 @@ int tsn_ct_set(char *portname, uint8_t pt_vector)
 		return ret;
 	}
 
-	return tsn_msg_recv_analysis(NULL);
+	return tsn_msg_recv_analysis(NULL, NULL);
 }
 
 int tsn_cbgen_set(char *portname, uint32_t index,
@@ -1338,7 +1546,7 @@ int tsn_cbgen_set(char *portname, uint32_t index,
 		return ret;
 	}
 
-	return tsn_msg_recv_analysis(NULL);
+	return tsn_msg_recv_analysis(NULL, NULL);
 }
 
 int tsn_cbrec_set(char *portname, uint32_t index,
@@ -1381,7 +1589,7 @@ int tsn_cbrec_set(char *portname, uint32_t index,
 		return ret;
 	}
 
-	return tsn_msg_recv_analysis(NULL);
+	return tsn_msg_recv_analysis(NULL, NULL);
 }
 
 int tsn_cbstatus_get(char *portname, uint32_t index,
@@ -1423,7 +1631,7 @@ int tsn_cbstatus_get(char *portname, uint32_t index,
 	cbstatget.link1 = &cb_get;
 	cbstatget.len2 = 0;
 	cbstatget.len3 = 0;
-	return tsn_msg_recv_analysis(&cbstatget);
+	return tsn_msg_recv_analysis(&cbstatget, (void *)cbstat);
 err:
 	free(msg);
 	return -EINVAL;
@@ -1470,5 +1678,5 @@ int tsn_dscp_set(char *portname, bool disable, int index,
 		return ret;
 	}
 
-	return tsn_msg_recv_analysis(NULL);
+	return tsn_msg_recv_analysis(NULL, NULL);
 }

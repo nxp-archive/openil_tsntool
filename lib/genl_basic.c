@@ -18,7 +18,6 @@
 #include <signal.h>
 #include <malloc.h>
 #include <string.h>
-#include <cjson/cJSON.h>
 #include <net/if.h>
 
 #include "tsn/genl_tsn.h"
@@ -301,24 +300,25 @@ int tsn_msg_check(struct msgtemplate msg, int rep_len)
 	if (msg.n.nlmsg_type == NLMSG_ERROR || !NLMSG_OK((&msg.n), rep_len)) {
 		struct nlmsgerr *err = NLMSG_DATA(&msg);
 		fprintf(stderr, "fatal reply error,  errno %d\n", err->error);
-		return -1;
+		return err->error;
 	}
 
 	return 0;
 }
 
-int tsn_msg_recv_analysis(struct showtable *linkdata)
+int tsn_msg_recv_analysis(struct showtable *linkdata, void *para)
 {
 	int rep_len;
 	int ret = 0;
 	int len, len1;
 	struct nlattr *na, *na1;
 	struct msgtemplate msg;
-
+	int msg_chk = 0;
 	int data;
 	char *string;
 	int remain;
 	int tsn;
+	int type;
 	cJSON *json = NULL;
 	cJSON *link1 = NULL;
 	cJSON *link2 = NULL;
@@ -331,7 +331,12 @@ int tsn_msg_recv_analysis(struct showtable *linkdata)
 
 	/* get kernel message echo */
 	rep_len = recv(glb_conf.genl_fd, &msg, sizeof(msg), 0);
-	if (rep_len < 0 || tsn_msg_check(msg, rep_len) < 0) {
+	if (rep_len < 0) {
+		fprintf(stderr, "nonfatal reply error: errno %d\n", rep_len);
+		return rep_len;
+	}
+	msg_chk = tsn_msg_check(msg, rep_len);
+	if (msg_chk < 0) {
 		fprintf(stderr, "nonfatal reply error: errno %d\n", errno);
 		return -errno;
 	}
@@ -362,6 +367,7 @@ int tsn_msg_recv_analysis(struct showtable *linkdata)
 			printf("echo reply:%s\n", string);
 			break;
 		case TSN_ATTR_QBV:
+		case TSN_ATTR_CAP:
 		case TSN_ATTR_STREAM_IDENTIFY:
 		case TSN_ATTR_QCI_SP:
 		case TSN_ATTR_QCI_SFI:
@@ -380,6 +386,7 @@ int tsn_msg_recv_analysis(struct showtable *linkdata)
 			na1 = nla_data(na);
 			len1 = 0;
 			int temp = 0;
+			type = na->nla_type;
 
 			printf("tsn: len: %04x type: %04x data:\n", na->nla_len, na->nla_type);
 			len1 += NLA_HDRLEN;
@@ -508,8 +515,12 @@ int tsn_msg_recv_analysis(struct showtable *linkdata)
 					break;
 				case NLA_FLAG:
 					printf("   %s \n", linkdata->link1[na1->nla_type].name);
-					cJSON_AddItemToObject(json, linkdata->link1[na1->nla_type].name,
-							      cJSON_CreateString("ON"));
+					if (type == TSN_ATTR_CAP)
+						cJSON_AddItemToObject(json, linkdata->link1[na1->nla_type].name,
+								      cJSON_CreateString("YES"));
+					else
+						cJSON_AddItemToObject(json, linkdata->link1[na1->nla_type].name,
+								      cJSON_CreateString("ON"));
 
 					break;
 				case NLA_U8:
@@ -601,6 +612,9 @@ int tsn_msg_recv_analysis(struct showtable *linkdata)
 			char *buf = NULL;
 			FILE *fp = fopen("/tmp/tsntool.json","w");
 
+			if (para)
+				get_para_from_json(type, json, para);
+
 			printf("json structure:\n %s\n",buf = cJSON_Print(json));
 			fwrite(buf,strlen(buf),1,fp);
 			free(buf);
@@ -672,8 +686,8 @@ int tsn_echo_test(char *string, int data)
 	}
 
 	/* receive message and (only 2 message types) */
-	tsn_msg_recv_analysis(NULL);
-	tsn_msg_recv_analysis(NULL);
+	tsn_msg_recv_analysis(NULL, NULL);
+	tsn_msg_recv_analysis(NULL, NULL);
 
 	return 0;
 }

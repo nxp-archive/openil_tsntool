@@ -21,6 +21,12 @@ int cli_cmd_help(UNUSED int argc, UNUSED char *argv[], UNUSED int number);
 int cli_cmd_version(UNUSED int argc, UNUSED char *argv[], UNUSED int number);
 int cli_cmd_quit(UNUSED int argc, UNUSED char *argv[], UNUSED int number);
 int cli_cmd_verbose(UNUSED int argc, UNUSED char *argv[], UNUSED int cmdnumber);
+int cli_cmd_tsn_cap_get(UNUSED int argc, UNUSED char *argv[],
+					 UNUSED int cmdnumber);
+
+int cli_cmd_qci_cap_get(UNUSED int argc, UNUSED char *argv[],
+					 UNUSED int cmdnumber);
+
 int cli_cmd_qbv_set(UNUSED int argc, UNUSED char *argv[], UNUSED int number);
 int cli_cmd_qbv_get(UNUSED int argc, UNUSED char *argv[], UNUSED int number);
 int cli_cmd_qci_sfi_set(UNUSED int argc, UNUSED char *argv[], UNUSED int number);

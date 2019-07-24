@@ -184,6 +184,34 @@ int qbv_entry_parse(char *config, struct tsn_qbv_entry *conf, uint32_t *count, u
 	return 0;
 }
 
+int fill_tsn_cap_get(char *portname)
+{
+	struct tsn_cap tsn_capa;
+
+	memset(&tsn_capa, 0, sizeof(struct tsn_cap));
+
+	if (portname == NULL) {
+		loge("--device could not be NULL.\n");
+		return -EINVAL;
+	}
+
+	return tsn_capability_get(portname, &tsn_capa);
+}
+
+int fill_qci_cap_get(char *portname)
+{
+	struct tsn_qci_psfp_stream_param sp;
+
+	memset(&sp, 0, sizeof(struct tsn_qci_psfp_stream_param));
+
+	if (portname == NULL) {
+		loge("--device could not be NULL.\n");
+		return -EINVAL;
+	}
+
+	return tsn_qci_streampara_get(portname, &sp);
+}
+
 int fill_qbv_set(char *portname, char *config, bool enable, uint8_t configchange,
 		uint64_t basetime, uint32_t cycletime,
 		uint32_t cycletimeext, uint32_t maxsdu, uint8_t initgate)
@@ -473,7 +501,7 @@ int fill_qci_sgi_set(char *portname, uint32_t index, bool enable, char *listtabl
 	if (listtable == NULL)
 		goto loadlib;
 
-	if (tsn_qci_streampara_get(&sp)) {
+	if (tsn_qci_streampara_get(portname, &sp)) {
 		memsize = MAX_ENTRY_SIZE;
 	} else {
 		count = sp.max_sg_instance;
@@ -527,7 +555,7 @@ int fill_qci_sgi_status_get(char *portname, int32_t sgi_handle)
 
 	memset(&maxcapb, 0, sizeof(struct tsn_qci_psfp_stream_param));
 
-	if (tsn_qci_streampara_get(&maxcapb)) {
+	if (tsn_qci_streampara_get(portname, &maxcapb)) {
 		memsize = MAX_ENTRY_SIZE;
 	} else {
 		count = maxcapb.max_sg_instance;

@@ -5,11 +5,12 @@
 
 #ifndef __END_DEF_FILL_H__
 #define __END_DEF_FILL_H__
+int fill_tsn_cap_get(char *portname);
 int fill_qbv_set(char *portname, char *config, bool enable, uint8_t configchange,
 		uint64_t basetime, uint32_t cycletime,
 		uint32_t cycletimeext, uint32_t maxsdu, uint8_t initgate);
-
 int fill_qbv_get(char *portname);
+int fill_qci_cap_get(char *portname);
 
 int fill_qci_sfi_set(char *portname, uint32_t streamfilterid, uint8_t enable,
 			int32_t streamhandle, int8_t priority, uint32_t gateid,
