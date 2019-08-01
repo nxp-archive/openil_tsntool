@@ -7,7 +7,7 @@ LIB_CFLAGS  += -Iinclude $(shell pkg-config --cflags libnl-3.0 libnl-genl-3.0) $
 BIN_CFLAGS   = $(CFLAGS)
 BIN_LDFLAGS  = $(LDFLAGS)
 BIN_CFLAGS  += -Wall -Wextra -Wno-error=unused-parameter -Wno-error=sign-compare -g -fstack-protector-all -Imain
-BIN_CFLAGS  += $(shell pkg-config --cflags libnl-3.0 libnl-genl-3.0) -Iinclude
+BIN_CFLAGS  += $(shell pkg-config --cflags libnl-3.0 libnl-genl-3.0 libcjson) -Iinclude
 BIN_LDFLAGS += -ltsn $(shell pkg-config --libs libnl-3.0 libnl-genl-3.0 libcjson) -lpthread -lm -lrt
 BIN_LDFLAGS += -lreadline -ltermcap -L.
 BIN_LDFLAGS += -Wl,-rpath,$(shell pwd)         # Compiled lib at local folder

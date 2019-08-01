@@ -49,10 +49,13 @@ def qcidisable():
 
 	return output.stdout.read()
 
-
-	return 'Qci disalbe'
-
-
+@app.route('/clientpostdata', methods=['POST'])
+def clientpostdata():
+	if request.method == 'POST':
+		a = request.form['mydata']
+	print(a)
+	d = {'name': 'xmr', 'age': 18}
+	return jsonify(d)
 
 if __name__ == '__main__':
     app.run(host = "0.0.0.0" , port = 8180, debug = True)

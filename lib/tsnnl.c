@@ -260,8 +260,6 @@ void get_para_from_json(int type, cJSON *json, void *para)
 	case TSN_ATTR_CBREC:
 	case TSN_ATTR_CBSTAT:
 	case TSN_ATTR_DSCP:
-	case SWITCH_ATTR_ACL:
-		break;
 	default:
 		break;
 	}

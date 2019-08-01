@@ -128,6 +128,21 @@ struct msgtemplate *tsn_send_cmd_prepare(__u8 genl_cmd)
 	return msg;
 }
 
+static inline int tsn_nla_attr_size(int payload)
+{
+	return NLA_HDRLEN + payload;
+}
+
+static inline int tsn_nla_total_size(int payload)
+{
+	return NLA_ALIGN(tsn_nla_attr_size(payload));
+}
+
+static inline int tsn_nla_padlen(int payload)
+{
+	return tsn_nla_total_size(payload) - tsn_nla_attr_size(payload);
+}
+
 void tsn_send_cmd_append_attr(struct msgtemplate *msg, __u16 nla_type, void *nla_data, int nla_len)
 {
 	struct nlattr *na;
@@ -136,12 +151,13 @@ void tsn_send_cmd_append_attr(struct msgtemplate *msg, __u16 nla_type, void *nla
 	na = (struct nlattr *)((char *)msg + (msg->n.nlmsg_len));
 
 	na->nla_type = nla_type;
-	na->nla_len = NLMSG_ALIGN(nla_len) + NLA_HDRLEN;
+	na->nla_len = NLMSG_ALIGN(NLA_HDRLEN) + nla_len;
 	memcpy(NLA_DATA(na), (char *)nla_data, nla_len);
 
 	PRINTF("add attr at %p , value is %x, len is %d na->nla_len is %d\n", na, *((int *)NLA_DATA(na)), nla_len, na->nla_len);
 
-	msg->n.nlmsg_len += na->nla_len;
+	msg->n.nlmsg_len += NLA_ALIGN(NLA_HDRLEN + nla_len);
+	memset((unsigned char *) na + na->nla_len, 0, tsn_nla_padlen(nla_len));
 
 	PRINTF("msg len is %d\n", msg->n.nlmsg_len);
 }
