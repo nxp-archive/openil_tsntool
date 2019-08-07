@@ -577,14 +577,18 @@ int tsn_msg_recv_analysis(struct showtable *linkdata, void *para)
 					{
 					int j;
 					uint64_t *p;
-					char *cnt_name[6]={"match", "pass", "gate_drop", "sdu_pass", "sdu_drop", "red"};
+
 					printf("\n=======================================================================================\n");
 					printf("   %s\n", linkdata->link1[na1->nla_type].name);
 					p = nla_data(na1);
 					for (j = 0; j < (linkdata->link1[na1->nla_type].len / 8); j++) {
+						char str[10];
+						
+						snprintf(str, 10, "%d", j);
+
 						printf("   %llx", *(uint64_t *)(p + j));
 
-						cJSON_AddItemToObject(json, cnt_name[j],
+						cJSON_AddItemToObject(json, str,
 								      cJSON_CreateNumber(*(uint64_t *)(p + j)));
 
 					}
