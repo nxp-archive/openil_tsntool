@@ -65,3 +65,25 @@ event.c provide the example:
 
 at last call wait_tsn_multicast(&alarminfo). will never return and keep waiting
 the multicast message.
+
+------------
+timestamping
+------------
+This app is use for sending frames and get timestamping for the frames.
+Here are some command examples:
+
+repeat send/receive frames with timestamping:
+./timestamping -i eno0 -c 0
+
+send 2 frames
+./timestamping -i eno0 -c 2
+
+fully send 2 frames without waiting the timestamping event.
+./timestamping -i eno0 -c 2 -f
+
+repeat fully sending frames
+./timestamping -i eno0 -c 0 -f
+
+only receive frame with timestamping repeat
+./timestamping -i eno0 -r
+

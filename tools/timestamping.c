@@ -128,7 +128,7 @@ int str2mac(const char *s, unsigned char mac[MAC_LEN])
 
 static void sendpacket(int sock, unsigned int length, char *mac)
 {
-	struct timeval now;
+	struct timeval now, nowb;
 	int res;
 	int i;
 
@@ -136,6 +136,9 @@ static void sendpacket(int sock, unsigned int length, char *mac)
 		sync_packet[6 + i] = mac[i];
 	sync_packet[17] = length >> 8;
 	sync_packet[18] = (char)(length & 0x00ff);
+
+	gettimeofday(&nowb, 0);
+
 	if (length < sizeof(sync_packet))
 		res = send(sock, sync_packet, sizeof(sync_packet), 0);
 	else {
@@ -150,9 +153,10 @@ static void sendpacket(int sock, unsigned int length, char *mac)
 	if (res < 0)
 		DEBUG("%s: %s\n", "send", strerror(errno));
 	else
-		DEBUG("%ld.%06ld: sent %d bytes\n",
-		       (long)now.tv_sec, (long)now.tv_usec,
-		       res);
+		DEBUG("%ld.%06ld - %ld.%06ld: sent %d bytes\n",
+		      (long)nowb.tv_sec, (long)nowb.tv_usec,
+		      (long)now.tv_sec, (long)now.tv_usec,
+		      res);
 }
 
 static void printpacket(struct msghdr *msg, int res,
