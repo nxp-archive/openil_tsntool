@@ -588,15 +588,14 @@ int tsn_msg_recv_analysis(struct showtable *linkdata, void *para)
 						       cnt_name[0], cnt_name[1], cnt_name[2],
 						       cnt_name[3], cnt_name[4], cnt_name[5],
 						       cnt_name[6], cnt_name[7]);
-					printf("\n=======================================================================================\n");
-					printf("   %s\n", linkdata->link1[na1->nla_type].name);
+					printf("\n ==counters==\n");
 					p = nla_data(na1);
-					for (j = 0; j < (linkdata->link1[na1->nla_type].len / 8); j++) {
-						printf("   %llx", *(uint64_t *)(p + j));
+					for (j = 0; j < (linkdata->link1[na1->nla_type].len / sizeof(uint64_t)); j++) {
+						printf("   %s : %llx\n", cnt_name[j],  *(uint64_t *)(p + j));
 						cJSON_AddItemToObject(json, cnt_name[j],
 								      cJSON_CreateNumber(*(uint64_t *)(p + j)));
 					}
-					printf("\n======================================================================================\n");
+					printf("\n === end ===\n");
 					}
 					break;
 				case NLA_STRING:
