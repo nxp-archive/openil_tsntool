@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>TSN Devices List</title>
+    <script src="static/jquery.min.js">
+    </script>
+    <style>
+	.button {
+	    background-color: #4CAF50; /* Green */
+	    border: none;
+	    color: white;
+	    padding: 6px 10px;
+	    text-align: center;
+	    text-decoration: none;
+	    display: inline-block;
+	    font-size: 15px;
+	    margin: 2px 1px;
+	    -webkit-transition-duration: 0.4s; /* Safari */
+	    transition-duration: 0.4s;
+	    cursor: pointer;
+	}
+	.link {
+	    background-color: white; 
+	    color: black; 
+	    padding: 4px 8px;
+	    border: 2px solid #4CAF50;
+	    border-radius: 5%;
+	    text-align: left;
+	    font-size: 30px;
+	}
+	.link:hover {
+	    background-color: #4CAF50;
+	    color: white;
+	}
+    </style>
+<script>
+
+ /* Jump to new page */
+  function LoadconfigdeviceHTML(n, i)
+  {
+	window.location.replace('/configdeviceHTML?name='+n+'&ip='+i);
+  }
+
+</script>
+
+</head>
+<body>
+
+<script>
+setInterval(function () {
+		$.get("/getdevices", function(data, status) {
+				console.log(data);
+				document.getElementById("devices").innerHTML = "";
+				$.each(data, function(i, field){
+					$("#devices").append(function() {
+						var refdev;
+						refdev = "<li class=\"button link\"><a id=\"dev" + i + "\" href=\"javascript:LoadconfigdeviceHTML('"+field.name+"','"+field.ip+"');\">";
+						refdev += field.name + "</a>" + field.ip;
+						refdev += "</li><br>";
+						console.log(refdev);
+						return (refdev);
+						});
+				});
+			}); 
+}, 2000);
+</script>
+
+
+<h1>CNC Test</h1>
+
+	<p class="button" style="font-size: 30px;cursor : crosshair;">devices list</p>
+	<hr />
+	<ul class="button" id=devices>	</ul>
+
+	<hr />
+
+<div id="createtable"></div>
+</body>
+</html>

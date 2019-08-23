@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Device Config</title>
+    <script src="static/jquery.min.js">
+    </script>
+    <script type='text/javascript' src="static/xml2json.js"></script>
+    <style>
+.button {
+    background-color: #4CAF50; /* Green */
+    border: none;
+    color: white;
+    padding: 6px 10px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 15px;
+    margin: 2px 1px;
+    -webkit-transition-duration: 0.4s; /* Safari */
+    transition-duration: 0.4s;
+    cursor: pointer;
+}
+.addtsn {
+    background-color: white; 
+    color: black; 
+    padding: 4px 8px;
+    border: 2px solid #4CAF50;
+    border-radius: 50%;
+}
+.addtsn:hover {
+    background-color: #4CAF50;
+    color: white;
+}
+.Qbv {
+    background-color: white; 
+    color: black; 
+    border: 2px solid #4CAF50;
+    border-radius: 10%;
+}
+.Qbv:hover {
+    background-color: #4CAF50;
+    color: white;
+}
+.Qci {
+    background-color: white; 
+    color: black; 
+    border: 2px solid #4CAF50;
+    border-radius: 10%;
+}
+.Qci:hover {
+    background-color: #4CAF50;
+    color: white;
+}
+.Qbu {
+    background-color: white; 
+    color: black; 
+    border: 2px solid #4CAF50;
+    border-radius: 10%;
+}
+.Qbu:hover {
+    background-color: #4CAF50;
+    color: white;
+}
+.CBS {
+    background-color: white; 
+    color: black; 
+    border: 2px solid #4CAF50;
+    border-radius: 10%;
+}
+.CBS:hover {
+    background-color: #4CAF50;
+    color: white;
+}
+.return {
+    background-color: white; 
+    color: black; 
+    border: 2px solid #4CAF50;
+    border-radius: 10%;
+}
+.return:hover {
+    background-color: #4CAF50;
+    color: white;
+}
+    </style>
+    <script>
+	function getUrlParam(name) {
+		var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)");
+		var r = window.location.search.substr(1).match(reg);
+		if (r != null) return unescape(r[2]);
+		return null;
+	}
+    </script>
+
+<script>
+var counter = 0;
+var devicename;
+var deviceip;
+	function getnameip() {
+		var devname = getUrlParam("name");
+		var devip = getUrlParam("ip");
+		var header =  "<h1 style=\"margin-bottom:0;\">SETTING "+devname+" : "+devip+"</h1>";
+		devicename = devname;
+		deviceip = devip;
+		document.getElementById("container").innerHTML = header; 
+	}
+
+	function formgetnameip() {
+		var devname = getUrlParam("name");
+		var devip = getUrlParam("ip");
+
+		console.log(devname, devip);
+		return {'devicename': devname, 'deviceip': devip}; 
+	}
+
+// Changes XML to JSON
+function parseXml(xml) {
+   var dom = null;
+   if (window.DOMParser) {
+      try { 
+         dom = (new DOMParser()).parseFromString(xml, "text/xml"); 
+      } 
+      catch (e) { dom = null; }
+   }
+   else if (window.ActiveXObject) {
+      try {
+         dom = new ActiveXObject('Microsoft.XMLDOM');
+         dom.async = false;
+         if (!dom.loadXML(xml)) // parse error ..
+
+            window.alert(dom.parseError.reason + dom.parseError.srcText);
+      } 
+      catch (e) { dom = null; }
+   }
+   else
+      alert("cannot parse xml string!");
+   return dom;
+}
+function xmlToJson(xml) {
+	dom = parseXml(xml);
+	jsonObj = xml2json(dom, "     ");
+	console.log(jsonObj);
+	return(jsonObj);
+}
+
+</script>
+
+<script>
+function aconfigremove()
+{
+	$('#aconfig').remove();
+}
+
+function reselect()
+{
+	var checkValue = $("#tsnprotocol").val();
+	switch(checkValue) {
+		case 'qbv':
+			window.configframe.location.href = "/configQbvHTML?name="+devicename+"&ip="+deviceip;
+			break;
+		case 'qci':
+			window.configframe.location.href = "/configQciHTML?name="+devicename+"&ip="+deviceip;
+			break;
+		case 'qbu':
+			window.configframe.location.href = "/configQbuHTML?name="+devicename+"&ip="+deviceip;
+			break;
+		case 'qav':
+			window.configframe.location.href = "/configQavHTML?name="+devicename+"&ip="+deviceip;
+			break;
+		case 'p8021cb':
+			window.configframe.location.href = "/configp8021cbHTML?name="+devicename+"&ip="+deviceip;
+			break;
+		default:
+			break;
+	};
+}
+
+function addtsnset() {
+	var btport = "<div id=\"aconfig\" style=\"border:1px solid #000;\"> \
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; \
+			<select class=\"button\" id=\"tsnprotocol\" name=\"tsnprotocol\" onchange=\"reselect()\"> \
+			<option value=\"qbv\" selected>qbv</option> \
+			<option value=\"qci\">qci</option> \
+			<option value=\"qbu\">qbu</option> \
+			<option value=\"qav\">qav</option> \
+			<option value=\"p8021cb\">p8021cb</option> \
+			</select>" ;
+	$('#btaddtsn').after(btport);
+	$('#tsnprotocol').after('<div style="position:relative;left:20px;top:2px"> \
+				<iframe id="configframe" name="configframe" style="position:float;top:200;margin=10px;width:300px;height:400px;"></iframe> \
+				</div>');
+	$('#configframe').after('&nbsp;&nbsp;<button id="configcancle" onclick="aconfigremove();" \
+				type="button" class="button configcancle">cancel</button>');
+	$('#configcancle').after('</div>');
+	window.configframe.location.href = "/configQbvHTML?name="+devicename+"&ip="+deviceip;
+}
+
+function getconfig() {
+	$.ajax({
+		type: "POST",
+		url: "/getconfig",
+		dataType: "json",
+		contentType: "application/json; charset=utf-8",
+		data: JSON.stringify({'device': deviceip}),
+		success: function(data){
+			if (data.status == "false")
+				alert('Feedback ERROR!');
+			$('#outputcontent', parent.document).append("<pre><code>"+xmlToJson(data.getconfig)+"</code></pre>");
+			$('#outputcontent', parent.document).append("<pre>"+"-------------------------"+counter+"-------------------------"+"</pre>");
+			counter += 1;
+		}});
+}
+</script>
+</head>
+<body>
+
+<div id="container" style="width:100%"></div>
+ 
+<script>
+getnameip();
+</script>
+
+<div id="header" style="background-color:#FFA500;">
+<h1 style="margin-bottom:0;"></h1></div>
+ 
+<div id="menu" style="background-color:#FFD700;height:600px;width:30%;float:left;border:1px solid #000;">
+<br>
+&nbsp;&nbsp;&nbsp;
+<b>  ADD TSN SETTING
+&nbsp;
+<button type="botton" class="button addtsn" id="btaddtsn" onclick="addtsnset()">+</button>
+<br>
+</b>
+<br>
+<br>
+&nbsp;&nbsp;&nbsp;
+<b>  STATUS
+&nbsp;
+<button type="button" class="button Qbv" onclick="getconfig()">Get Config</button>
+
+</b>
+<br>
+</div>
+<div style="overflow: auto;height:600px;width:69%;background-color:#EEEEEE;float:left;border:1px solid #000;">
+<div  id="outputcontent" style="top:0;bottom:0;overflow-y：scroll;background-color:#EEEEEE;height:100%;width:100%;float:left;">
+	console output<br> 
+</div>
+</div>
+<div id="footer" style="background-color:#FFA500;clear:both;text-align:center;">
+www.nxp.com</div>
+
+<button class="button return" onclick="javascript:window.location.replace('/');"> return </button>
+</body>
+</html>

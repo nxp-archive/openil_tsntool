@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Config Qbv</title>
+    <script src="static/jquery.min.js">
+    </script>
+    <style>
+.button {
+    background-color: #4CAF50; /* Green */
+    border: none;
+    color: white;
+    padding: 4px 6px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 13px;
+    margin: 2px 1px;
+    -webkit-transition-duration: 0.4s; /* Safari */
+    transition-duration: 0.4s;
+    cursor: pointer;
+}
+.device {
+    background-color: white; 
+    color: black; 
+    border: 2px solid #4CAF50;
+    -webkit-transition-duration: 0.1s; /* Safari */
+    transition-duration: 0.1s;
+    border-radius: 5%;
+}
+.device:hover {
+    background-color: #4CAF50;
+    color: white;
+}
+.confirm {
+    background-color: #4CAF50; 
+    color: black; 
+    position: center;
+    font-weight: bold;
+    font-size: 15px;
+    border: 2px solid #4CAF50;
+    border-radius: 5%;
+}
+.confirm:hover {
+    background-color: #4CAF50;
+    color: white;
+}
+.addlist {
+    background-color: white; 
+    color: black; 
+    padding: 2px 6px;
+    font-weight: bold;
+    border: 2px solid #4CAF50;
+    border-radius: 100%;
+}
+.addlist:hover {
+    background-color: #4CAF50;
+    color: white;
+}
+</style>
+</head>
+<body>
+<script>
+var portname = 'eno0';
+var enable = 'false';
+var preemptset = {};
+
+function choosport()
+{
+	var checkValue = $("#portselect").val();
+	portname = checkValue;
+}
+
+function selectpreempt()
+{
+	var i = 0;
+	$('input:radio[value="preemptable"]').each(function(){
+				var isChecked = $(this).attr("checked");
+				if (isChecked == "checked") {
+					console.log(isChecked);
+					$("input[type=radio][name=enable][value=true]").attr("checked", "checked");
+					enable = 'true';
+					return false; //measn break;
+				}
+				i++;
+			});
+	if (i == 8) {
+		$('input:radio[name="enable"][value="false"]').attr("checked", "checked");
+		enable = 'false';
+	}
+}
+
+function selectenable()
+{
+	var radioVal = $('input:radio[name="enable"]:checked').val();
+	if (radioVal == "false") {
+		$('input:radio[value="express"]').each(function() {
+					$(this).attr("checked", "checked");
+				});
+	} else {
+		selectpreempt();
+		radioVal = "false";
+	}
+
+	enable = radioVal;
+	console.log(enable);
+}
+
+function confirmset()
+{
+	var i = 0;
+	var deviceself = window.parent.formgetnameip();
+
+	preemptset['device'] = deviceself['deviceip'];
+	preemptset['plist'] = [];
+	preemptset['port'] = $("#portselect").val();
+
+	$('input:radio[value="preemptable"]').each(function(){
+				var isChecked = $(this).attr("checked");
+				if (isChecked == "checked")
+					preemptset['plist'].push({tc: i, preemptable: "preemptable"});
+				else
+					preemptset['plist'].push({tc: i, preemptable: "express"});
+				i++;
+			});
+	preemptset['enable'] = enable;
+	console.log(preemptset);
+
+	$.ajax({
+		type: "POST",
+		url: "/qbuset",
+		dataType: "json",
+		contentType: "application/json; charset=utf-8",
+		data: JSON.stringify(preemptset),
+		success: function(data){
+			if (data.status == 'false')
+				alert('Feedback ERROR!');
+			var parameter = window.parent.xmlToJson(data.getconfig);
+			var jsonpara =  jQuery.parseJSON(parameter);
+			if (jsonpara["interfaces"]["parsererror"] != undefined) {
+				delete(jsonpara.interfaces.parsererror);
+				parameter = JSON.stringify(jsonpara, undefined, 4);
+				}
+				
+			$('#outputcontent', parent.document).append("<pre>"+"editconfig operation: "+data.status+"</pre>");
+			$('#outputcontent', parent.document).append("<pre><code>"+parameter+"</code></pre>");
+			$('#outputcontent', parent.document).append("<pre>"+'-------------------------'+window.parent.counter+'-------------------------'+"</pre>");
+			window.parent.counter += 1;
+		}});
+}
+</script>
+
+<div>
+<form>
+<b>*device:
+<select class="button device" id="portselect" name="portselect" onchange="choosport()">
+	<option value="eno0" selected>eno0</option>
+	<option value="eno2">eno2</option>
+	<option value="eno3">eno3</option>
+	<option value="swp0">swp0</option>
+	<option value="swp1">swp1</option>
+	<option value="swp2">swp2</option>
+	<option value="swp3">swp3</option>
+	<option value="swp4">swp4</option>
+ </select>
+<br><br>
+<input class="button addlist" type="radio" name="enable" value="true" onclick="selectenable()">enable
+<input class="button addlist" type="radio" name="enable" value="false" onclick="selectenable()" checked="checked">disable
+<br>&nbsp;&nbsp;
+<br>TC0</b>
+<input class="button addlist" type="radio" name="tc0" value="preemptable" onclick="selectpreempt()">preemptable
+<input class="button addlist" type="radio" name="tc0" value="express" onclick="selectpreempt()"  checked="checked">express
+<b>
+<br>TC1</b>
+<input class="button addlist" type="radio" name="tc1" value="preemptable" onclick="selectpreempt()">preemptable
+<input class="button addlist" type="radio" name="tc1" value="express" onclick="selectpreempt()"  checked="checked">express
+<b>
+<br>TC2</b>
+<input class="button addlist" type="radio" name="tc2" value="preemptable" onclick="selectpreempt()">preemptable
+<input class="button addlist" type="radio" name="tc2" value="express" onclick="selectpreempt()"  checked="checked">express
+<b>
+<br>TC3</b>
+<input class="button addlist" type="radio" name="tc3" value="preemptable" onclick="selectpreempt()">preemptable
+<input class="button addlist" type="radio" name="tc3" value="express" onclick="selectpreempt()"  checked="checked">express
+<b>
+<br>TC4</b>
+<input class="button addlist" type="radio" name="tc4" value="preemptable" onclick="selectpreempt()">preemptable
+<input class="button addlist" type="radio" name="tc4" value="express" onclick="selectpreempt()"  checked="checked">express
+<b>
+<br>TC5</b>
+<input class="button addlist" type="radio" name="tc5" value="preemptable" onclick="selectpreempt()">preemptable
+<input class="button addlist" type="radio" name="tc5" value="express" onclick="selectpreempt()"  checked="checked">express
+<b>
+<br>TC6</b>
+<input class="button addlist" type="radio" name="tc6" value="preemptable" onclick="selectpreempt()">preemptable
+<input class="button addlist" type="radio" name="tc6" value="express" onclick="selectpreempt()"  checked="checked">express
+<b>
+<br>TC7</b>
+<input class="button addlist" type="radio" name="tc7" value="preemptable" onclick="selectpreempt()">preemptable
+<input class="button addlist" type="radio" name="tc7" value="express" onclick="selectpreempt()"  checked="checked">express
+<br><br><br><b>
+<input class="button device confirm" type="button" name="confirm" id="confirm" onclick="confirmset()" value="Yes, confirm">
+</form>
+</div>
+</body>
+</html>
