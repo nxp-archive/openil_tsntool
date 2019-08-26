@@ -158,8 +158,13 @@ function confirmset()
 	qbvadmin["device"] = deviceself['deviceip'];
 	qbvadmin["port"] = $("#portselect").val();
 	var basetime = $("input[name='basetime']").val();
-	if (basetime != '')
+	if (basetime != '') {
 		qbvadmin["basetime"] = basetime;
+		if (isNaN(parseInt(basetime))) {
+			alert("Basetime Error!");
+			return;
+		}
+	}
 
 	qbvadmin["enable"] = enable;
 
@@ -167,6 +172,18 @@ function confirmset()
 	for (var i = 0, len = gatelist.length; i < len; i++) {
 		var gatep = "g" + gatelist[i];
 		var periodp = "p" + gatelist[i];
+		if (isNaN(parseInt($("#"+gatep).val()))) {
+			alert("Gate value Error");
+			return;
+		} else if (parseInt($("#"+gatep).val()) > 255) {
+			alert("Gate value Error");
+			return;
+		}
+		if (isNaN(parseInt($("#"+periodp).val()))) {
+			alert("Period value Error");
+			return;
+		}
+
 		qbvadmin["entry"].push({gate: $("#"+gatep).val(), period: $("#"+periodp).val()});
 	}
 	console.log(qbvadmin);
