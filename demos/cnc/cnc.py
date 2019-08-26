@@ -70,6 +70,15 @@ def loadnetconfqbv(configdata):
     configchange.text = 'true';
 
     #admin = ET.SubElement(port, 'admin');
+    print(configdata['enable']);
+    if (configdata['enable'] == 'false'):
+        enable.text = 'false';
+        prettyXml(interfaces);
+        ET.dump(interfaces);
+        qbvxmlb = ET.tostring(interfaces, encoding='utf8', method='xml');
+        qbvxmlstr = str(qbvxmlb, encoding='utf-8');
+
+        return loadNetconf(qbvxmlstr, configdata['device']);
 
     listlen = ET.SubElement(admin, 'sched:admin-control-list-length');
     listlen.text = str(len(configdata['entry']));
@@ -173,7 +182,7 @@ def qbvset():
     try:
        tojson = request.get_json();
        print (tojson);
-       print("%s %s %s"%(tojson['device'], tojson['entry'][0], len(tojson['entry'])));
+       print("%s "%(tojson['device']));
        print (type(tojson))
        status, ret = loadnetconfqbv(tojson);
        print (ret);

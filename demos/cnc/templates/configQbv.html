@@ -168,12 +168,13 @@ function confirmset()
 
 	qbvadmin["enable"] = enable;
 
+	if (enable == 'true') {
 	qbvadmin["entry"] =[];  //Must new the array
 	for (var i = 0, len = gatelist.length; i < len; i++) {
 		var gatep = "g" + gatelist[i];
 		var periodp = "p" + gatelist[i];
 		if (isNaN(parseInt($("#"+gatep).val()))) {
-			alert("Gate value Error");
+			alert("Gate value Error, Input a integer < 256");
 			return;
 		} else if (parseInt($("#"+gatep).val()) > 255) {
 			alert("Gate value Error");
@@ -185,6 +186,7 @@ function confirmset()
 		}
 
 		qbvadmin["entry"].push({gate: $("#"+gatep).val(), period: $("#"+periodp).val()});
+	}
 	}
 	console.log(qbvadmin);
 
