@@ -1161,7 +1161,7 @@ int tsn_qos_port_qbv_set(char *portname, struct tsn_qbv_conf *adminconf, bool en
 
 		i++;
 
-		if (i > MAX_ENTRY_SIZE/sizeof(struct tsn_qbv_entry))
+		if (i >= MAX_ENTRY_SIZE/sizeof(struct tsn_qbv_entry))
 			break;
 	}
 
