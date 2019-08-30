@@ -66,13 +66,12 @@ def loadnetconfqbv(configdata):
     gate_enable = ET.SubElement(admin, 'sched:gate-enabled');
     gate_enable.text = configdata['enable'];
 
-    configchange = ET.SubElement(port, 'sched:config-change');
+    configchange = ET.SubElement(admin, 'sched:config-change');
     configchange.text = 'true';
 
     #admin = ET.SubElement(port, 'admin');
     print(configdata['enable']);
     if (configdata['enable'] == 'false'):
-        enable.text = 'false';
         prettyXml(interfaces);
         ET.dump(interfaces);
         qbvxmlb = ET.tostring(interfaces, encoding='utf8', method='xml');
@@ -131,7 +130,7 @@ def loadnetconfqbu(configdata):
     iname = ET.SubElement(port, 'name');
     iname.text = configdata['port'];
     enable = ET.SubElement(port, 'enabled');
-    enable.text =  configdata['enable'];
+    enable.text =  'true';
     tclist = ET.SubElement(port, 'preempt:frame-preemption-parameters');
 
     for i in range(len(configdata['plist'])):
