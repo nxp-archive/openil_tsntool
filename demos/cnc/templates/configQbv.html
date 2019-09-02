@@ -201,8 +201,8 @@ function confirmset()
 				alert('Feedback ERROR!');
 			var parameter = window.parent.xmlToJson(data.getconfig);
 			var jsonpara =  jQuery.parseJSON(parameter);
-			if (jsonpara["interfaces"]["parsererror"] != undefined) {
-				delete(jsonpara.interfaces.parsererror);
+			if (jsonpara["if:interfaces"]["parsererror"] != undefined) {
+				delete(jsonpara["if:interfaces"]["parsererror"]);
 				parameter = JSON.stringify(jsonpara, undefined, 4);
 				}
 
