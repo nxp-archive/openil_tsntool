@@ -172,6 +172,14 @@ struct linkpara cb_get[TSN_CBSTAT_ATTR_MAX + 1] = {
 	[TSN_CBSTAT_ATTR_SEQ_HIS]	= { NLA_U32, 3, "seq_history"},
 };
 
+struct linkpara qbu_get[TSN_QBU_ATTR_MAX + 1] = {
+	[TSN_QBU_ATTR_ADMIN_STATE]	= { NLA_U8, 2, "preemtable"},
+	[TSN_QBU_ATTR_HOLD_ADVANCE]	= { NLA_U32, 3, "holdadvance"},
+	[TSN_QBU_ATTR_RELEASE_ADVANCE]	= { NLA_U32, 3, "releaseadvance"},
+	[TSN_QBU_ATTR_ACTIVE]		= { NLA_FLAG, 2, "active"},
+	[TSN_QBU_ATTR_HOLD_REQUEST]     = { NLA_U8, 2, "holdrequest"},
+};
+
 static void get_tsn_cap_para_from_json(cJSON *json, void *para)
 {
 	cJSON *item;
@@ -1447,6 +1455,7 @@ int tsn_qbu_get_status(char *portname, struct tsn_preempt_status *pts)
 {
 	struct msgtemplate *msg;
 	int ret;
+	struct showtable qbuget;
 
 	if (portname == NULL)
 		return -EINVAL;
@@ -1465,7 +1474,11 @@ int tsn_qbu_get_status(char *portname, struct tsn_preempt_status *pts)
 		return ret;
 	}
 
-	return tsn_msg_recv_analysis(NULL, (void *)pts);
+	qbuget.type = TSN_ATTR_QBU;
+	qbuget.len1 = TSN_QBU_ATTR_MAX;
+	qbuget.link1 = &qbu_get;
+
+	return tsn_msg_recv_analysis(&qbuget, (void *)pts);
 }
 
 int tsn_ct_set(char *portname, uint8_t pt_vector)
