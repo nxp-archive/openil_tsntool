@@ -413,7 +413,7 @@ int get_tsn_record(struct tsn_conf_record *record)
 	return -1;
 }
 
-void create_record(struct tsn_conf_record *record)
+void create_record(char *portname, int cmd, uint32_t index)
 {
 }
 #endif
