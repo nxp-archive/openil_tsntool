@@ -329,7 +329,9 @@ def loadncqciset(configdata):
     print(configdata);
     bridges = ET.Element('bridges');
     bridges.set('xmlns', 'urn:ieee:std:802.1Q:yang:ieee802-dot1q-bridge');
-    bridges.set('xmlns:stream', 'urn:ieee:std:802.1Q:yang:ieee802-dot1q-stream-id');
+    bridges.set('xmlns:sfsg', 'urn:ieee:std:802.1Q:yang:ieee802-dot1q-stream-filters-gates');
+    bridges.set('xmlns:psfp', 'urn:ieee:std:802.1Q:yang:ieee802-dot1q-psfp');
+
     bridge = ET.SubElement(bridges, 'bridge');
     #we have to judge by port name
     brname = ET.SubElement(bridge, 'name');
