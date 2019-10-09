@@ -1155,9 +1155,10 @@ int cli_cmd_streamid_set(UNUSED int argc, UNUSED char *argv[], UNUSED int cmdnum
 
 	case STREAMID_IP:
 	default:
-		loge("Type do not supported!");
-		if (enable)
+		if (enable) {
+			loge("Type do not supported!");
 			return -1;
+		}
 	}
 
 	streamid.handle = streamhandle;
