@@ -172,6 +172,15 @@ def loadncqcisid(configdata):
     sidtable = ET.SubElement(streams, 'stream:stream-identity-table');
     index = ET.SubElement(sidtable, 'stream:index');
     index.text = configdata['index'];
+
+    enable = ET.SubElement(sidtable, 'stream:stream-id-enabled');
+    enable.text = configdata['enable'];
+    if (configdata['enable'] == 'false'):
+        prettyXml(bridges);
+        sidxmlb = ET.tostring(bridges, encoding='utf8', method='xml');
+        sidxmlstr = str(sidxmlb, encoding='utf-8');
+        return loadNetconf(sidxmlstr, configdata['device']);
+
     streamhandle = ET.SubElement(sidtable, 'stream:stream-handle');
     streamhandle.text = configdata['streamhandle'];
     identype = ET.SubElement(sidtable, 'stream:identification-type');
@@ -211,6 +220,11 @@ def createsfixml(component, configdata):
     sfitable = ET.SubElement(streamfilter, 'sfsg:stream-filter-instance-table');
     index = ET.SubElement(sfitable, 'sfsg:stream-filter-instance-id');
     index.text = configdata['index'];
+    enable = ET.SubElement(sfitable, 'qci-augment:stream-filter-enabled');
+    enable.text = configdata['enable'];
+    if (configdata['enable'] == 'false'):
+        return
+
     if (configdata.__contains__('streamhandle')):
         streamhandle = ET.SubElement(sfitable, 'sfsg:stream-handle');
         streamhandle.text = configdata['streamhandle'];
@@ -294,6 +308,11 @@ def createfmixml(component, configdata):
     fmitable =  ET.SubElement(flowmeter, 'psfp:flow-meter-instance-table');
     index = ET.SubElement(fmitable, 'psfp:flow-meter-instance-id');
     index.text = configdata['index'];
+    enable = ET.SubElement(fmitable, 'qci-augment:flow-meter-enabled');
+    enable.text = configdata['enable'];
+    if (configdata['enable'] == 'false'):
+        return;
+
     if configdata.__contains__('cir'):
         cir = ET.SubElement(fmitable, 'psfp:committed-information-rate');
         cir.text = configdata['cir'];
@@ -331,6 +350,7 @@ def loadncqciset(configdata):
     bridges.set('xmlns', 'urn:ieee:std:802.1Q:yang:ieee802-dot1q-bridge');
     bridges.set('xmlns:sfsg', 'urn:ieee:std:802.1Q:yang:ieee802-dot1q-stream-filters-gates');
     bridges.set('xmlns:psfp', 'urn:ieee:std:802.1Q:yang:ieee802-dot1q-psfp');
+    bridges.set('xmlns:qci-augment', 'urn:ieee:std:802.1Q:yang:ieee802-dot1q-qci-augment');
 
     bridge = ET.SubElement(bridges, 'bridge');
     #we have to judge by port name
