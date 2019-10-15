@@ -364,7 +364,7 @@ int get_tsn_record(struct tsn_conf_record *record)
 			free(json_data);
 			flock(fp->_fileno, LOCK_UN);
 			fclose(fp);
-			return FALSE;
+			return -1;
 		}
 	} else {
 		lloge("malloc error");
