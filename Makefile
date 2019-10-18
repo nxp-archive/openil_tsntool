@@ -32,13 +32,13 @@ build: $(TSN_LIB) $(TSN_BIN) $(TSN_EVENT) $(TSTAMP_BIN)
 $(TSN_LIB): $(LIB_DEPS)
 	$(CC) -shared $(LIB_OBJ) -o $@ $(LIB_LDFLAGS)
 
-$(TSN_BIN): $(BIN_DEPS)
+$(TSN_BIN): $(BIN_DEPS) $(TSN_LIB)
 	$(CC) $(BIN_OBJ) -o $@ $(BIN_LDFLAGS)
 
-$(TSN_EVENT): tools/$(TSN_EVENT).o
+$(TSN_EVENT): tools/$(TSN_EVENT).o $(TSN_LIB)
 	$(CC) tools/$(TSN_EVENT).o -o tools/$(TSN_EVENT) $(BIN_LDFLAGS)
 
-$(TSTAMP_BIN): tools/$(TSTAMP_BIN).o
+$(TSTAMP_BIN): tools/$(TSTAMP_BIN).o $(TSN_LIB)
 	$(CC) tools/$(TSTAMP_BIN).o -o tools/$(TSTAMP_BIN) $(BIN_LDFLAGS)
 
 lib/%.o: lib/%.c
