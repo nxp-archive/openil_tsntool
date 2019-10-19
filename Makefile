@@ -1,14 +1,15 @@
+PKG_CONFIG ?= pkg-config
 LIB_CFLAGS   = $(CFLAGS)
 LIB_LDFLAGS  ?= $(LDFLAGS)
 LIB_CFLAGS  += -Wall -Wextra -g -fstack-protector-all -Ilib -fPIC
-LIB_CFLAGS  += -Iinclude $(shell pkg-config --cflags libnl-3.0 libnl-genl-3.0) $(shell pkg-config --cflags libcjson) -Imain
+LIB_CFLAGS  += -Iinclude $(shell $(PKG_CONFIG) --cflags libnl-3.0 libnl-genl-3.0) $(shell $(PKG_CONFIG) --cflags libcjson) -Imain
 #LIB_LDFLAGS += -lnl-3
 
 BIN_CFLAGS   = $(CFLAGS)
 BIN_LDFLAGS  = $(LDFLAGS)
 BIN_CFLAGS  += -Wall -Wextra -Wno-error=unused-parameter -Wno-error=sign-compare -Wno-format-security -g -fstack-protector-all -Imain
-BIN_CFLAGS  += $(shell pkg-config --cflags libnl-3.0 libnl-genl-3.0 libcjson) -Iinclude
-BIN_LDFLAGS += -ltsn $(shell pkg-config --libs libnl-3.0 libnl-genl-3.0 libcjson) -lpthread -lm -lrt
+BIN_CFLAGS  += $(shell $(PKG_CONFIG) --cflags libnl-3.0 libnl-genl-3.0 libcjson) -Iinclude
+BIN_LDFLAGS += -ltsn $(shell $(PKG_CONFIG) --libs libnl-3.0 libnl-genl-3.0 libcjson) -lpthread -lm -lrt
 BIN_LDFLAGS += -lreadline -ltermcap -L.
 BIN_LDFLAGS += -Wl,-rpath,$(shell pwd)         # Compiled lib at local folder
 
