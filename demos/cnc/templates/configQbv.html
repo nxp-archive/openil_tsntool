@@ -199,15 +199,13 @@ function confirmset()
 		success: function(data){
 			if (data.status == 'false')
 				alert('Feedback ERROR!');
-			var parameter = window.parent.xmlToJson(data.getconfig);
-			var jsonpara =  jQuery.parseJSON(parameter);
-			if (jsonpara["if:interfaces"]["parsererror"] != undefined) {
-				delete(jsonpara["if:interfaces"]["parsererror"]);
-				parameter = JSON.stringify(jsonpara, undefined, 4);
-				}
 
 			$('#outputcontent', parent.document).append("<pre>"+"editconfig operation: "+ HTMLEncode(data.status)+"</pre>");
-			$('#outputcontent', parent.document).append("<pre><code>"+parameter+"</code></pre>");
+			window.parent.showconfig("if:interfaces", data.getconfig);
+			window.parent.showconfig("dot1q:bridges", data.getconfig);
+			window.parent.showconfig("bridges", data.getconfig);
+			window.parent.showconfig("interfaces", data.getconfig);
+			//$('#outputcontent', parent.document).append("<pre><code>"+parameter+"</code></pre>");
 			$('#outputcontent', parent.document).append("<pre>"+HTMLEncode('-------------------------')+window.parent.counter+HTMLEncode('-------------------------')+"</pre>");
 			window.parent.counter += 1;
 		}});

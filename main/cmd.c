@@ -1155,9 +1155,10 @@ int cli_cmd_streamid_set(UNUSED int argc, UNUSED char *argv[], UNUSED int cmdnum
 
 	case STREAMID_IP:
 	default:
-		loge("Type do not supported!");
-		if (enable)
+		if (enable) {
+			loge("Type do not supported!");
 			return -1;
+		}
 	}
 
 	streamid.handle = streamhandle;
@@ -1944,7 +1945,7 @@ int cli_cmd_tsd_get(UNUSED int argc, UNUSED char *argv[], UNUSED int cmdnumber)
 
 void cmd_qbuset_help(void)
 {
-	printf("cbsqueueget\n \
+	printf("qbuset\n \
 			--device <ifname>\n \
 			--preemptable <value>\n \
 			--help\n\n");
@@ -1996,9 +1997,8 @@ int cli_cmd_qbu_set(UNUSED int argc, UNUSED char *argv[], UNUSED int cmdnumber)
 
 void cmd_qbugetstatus_help(void)
 {
-	printf("cbsqueueget\n \
+	printf("qbugetstatus\n \
 			--device <ifname>\n \
-			--preemptable <value>\n \
 			--help\n\n");
 }
 

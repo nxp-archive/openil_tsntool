@@ -377,6 +377,13 @@ struct global_conf {
 	__u32 pid;
 };
 
+struct tsn_conf_record {
+	__u32 pid;
+	char portname[MAX_NAME_LEN];
+	__u32 cmd;
+	__u32 para;
+};
+
 extern struct global_conf glb_conf;
 
 static inline struct nlattr *tsn_nla_nest_start(struct msgtemplate *msg, __u16 nla_type)
@@ -451,5 +458,8 @@ pthread_t *create_alarm_common(uint64_t ts, uint32_t offset, uint32_t cycle,
 int delete_alarm_common(pthread_t *thread);
 int wait_tsn_multicast();
 void get_para_from_json(int type, cJSON *json, void *para);
+
+bool get_conf_monitor_status(void);
+int get_tsn_record(struct tsn_conf_record *record);
 
 #endif /* _TSN_GENETLINK_KERN_H */

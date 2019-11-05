@@ -10,11 +10,11 @@
     background-color: #4CAF50; /* Green */
     border: none;
     color: white;
-    padding: 6px 10px;
+    padding: 4px 6px;
     text-align: center;
     text-decoration: none;
     display: inline-block;
-    font-size: 15px;
+    font-size: 13px;
     margin: 2px 1px;
     -webkit-transition-duration: 0.4s; /* Safari */
     transition-duration: 0.4s;
@@ -24,15 +24,724 @@
     background-color: white; 
     color: black; 
     border: 2px solid #4CAF50;
-    border-radius: 50%;
+    -webkit-transition-duration: 0.1s; /* Safari */
+    transition-duration: 0.1s;
+    border-radius: 5%;
 }
 .device:hover {
     background-color: #4CAF50;
     color: white;
 }
+.confsection {
+    background-color: white;
+    color: black;
+    border: 2px solid #4CAF50;
+    -webkit-transition-duration: 0.1s; /* Safari */
+    transition-duration: 0.1s;
+    border-radius: 5%;
+    font-size: 16px;
+}
+.confsection:hover {
+    background-color: #4CAF50;
+    color: white;
+}
+.value {
+    background-color: white;
+    color: black;
+    width: 60px;
+    height: 10px;
+    border: 2px solid #4CAF50;
+    border-radius: 5%;
+/*    float: right;*/
+}
+.value:hover {
+    background-color: #4CAF50;
+    color: white;
+}
+.short {
+    background-color: white;
+    color: black;
+    width: 6px;
+    height: 10px;
+    border: 2px solid #4CAF50;
+    border-radius: 5%;
+}
+.short:hover {
+    background-color: #4CAF50;
+    color: white;
+}
+.confirm {
+    background-color: #4CAF50;
+    color: black;
+    position: center;
+    font-weight: bold;
+    font-size: 15px;
+    border: 2px solid #4CAF50;
+    border-radius: 5%;
+}
+.confirm:hover {
+    background-color: #4CAF50;
+    color: white;
+}
+.addlist {
+    background-color: white;
+    color: black;
+    padding: 2px 6px;
+    font-weight: bold;
+    border: 2px solid #4CAF50;
+    border-radius: 100%;
+}
+.addlist:hover {
+    background-color: #4CAF50;
+    color: white;
+}
+.macinput {
+    background-color: white;
+    color: black;
+    padding: 2px 2px;
+    width: 20px;
+    font-weight: bold;
+    border: 1px solid #4CAF50;
+    border-radius: 5%;
+}
+.macinput:hover {
+    background-color: #4CAF50;
+    color: white;
+}
 </style>
+<script>
+Array.prototype.indexOf = function(val) {
+for (var i = 0; i < this.length; i++) {
+if (this[i] == val) return i;
+}
+return -1;
+};
+
+Array.prototype.remove = function(val) {
+var index = this.indexOf(val);
+if (index > -1) {
+this.splice(index, 1);
+}
+};
+
+</script>
+
+ <script language=javascript>
+
+     function getPos(obj)
+     {
+         obj.focus();
+         var workRange=document.selection.createRange();
+         obj.select();
+         var allRange=document.selection.createRange();
+         workRange.setEndPoint("StartToStart",allRange);
+         var len=workRange.text.length;
+         workRange.collapse(false);
+         workRange.select();
+         return len;
+     }
+
+     function setCursor(obj,num)
+     {
+         range=obj.createTextRange();
+         range.collapse(true);
+         range.moveStart('character',num);
+         range.select();
+     }
+
+     function keyDownEvent(obj)
+     {
+         code=event.keyCode;
+         if(!((code>=48&&code<=57)||(code>=65&&code<=70)||(code>=96&&code<=105)||code==190||code==110||code==13||code==9||code==39||code==8||code==46||code==99||    code==37))
+             event.returnValue=false;
+         if(code==13)
+             event.keyCode=9;
+         if(code==110||code==190)
+             if(obj.value)
+                 event.keyCode=9;
+             else
+                 event.returnValue=false;
+     }
+
+     function keyUpEvent(obj0,obj1,obj2)
+     {
+         if (obj1.value > 255)
+         {
+             alert("input range 0 - 255");
+	     obj1.value = obj1.value.substring(0, obj1.value.length - 1);
+	     return;
+         }
+         code=event.keyCode
+
+         if(obj1.value.length>=2&&code!=37&&code!=39&&code!=16&&code!=9&&code!=13)
+             obj2.focus();
+
+         if(code == 32)
+             obj2.focus();
+
+         if(code == 8 && obj1.value.length == 0)
+         {
+             obj0.focus();
+             setCursor(obj0,obj0.value.length);
+         }
+
+         if (code == 37 && (getPos(obj1) == 0))
+         {
+             obj0.focus();
+             setCursor(obj0,obj0.value.length);
+         }
+         if (code == 39 && (getPos(obj1) == obj1.value.length))
+         {
+             obj2.focus();
+         }
+     }
+     function keyUpEventForMac6(obj0,obj)
+     {
+         if (obj.value > 255)
+         {
+             alert("range 0 - 255");
+             obj.value = obj.value.substring(0, obj.value.length - 1);
+             return;
+         }
+         if(code == 8 && obj.value.length == 0)
+         {
+             obj0.focus();
+             setCursor(obj0,obj0.value.length);
+         }
+         if (code == 37 && (getPos(obj) == 0))
+         {
+             obj0.focus();
+             setCursor(obj0,obj0.value.length);
+         }
+
+     }
+
+function getmacvalue(obj1,obj2,obj3,obj4,obj5, obj6, obj)
+{
+         obj.value = obj1.value + ":" + obj2.value + ":" + obj3.value + ":" + obj4.value + ":" +obj5.value + ":" + obj6.value;
+         return (obj.value);
+}
+
+function octkeyup(obj)
+	{
+		$(obj).val($(obj).val().replace(/[^0-9-]+/,''));
+		if ($(obj).val().length == 1) {
+			$(obj).val() == '0' ? $(obj).val('1') : $(obj).val();
+		}
+	}
+
+	function octkeydown(obj)
+	{
+		$(obj).val($(obj).val().replace(/[^0-9-]+/,''));
+		if($(obj).val().length == 1){
+			$(obj).val() == '0' ? $(obj).val('1') : $(obj).val();
+		}
+	}
+ </script>
+
+<script>
+$(document).ready(function(){
+	console.log("starting");
+	$("#sficonf").remove();
+	$('#sgiconf').remove();
+	$('#fmiconf').remove();
+	$('#afterselsection').after(sidconf);
+
+	$(function () {
+		if ($.browser.msie) {
+			$('input:checkbox').click(function () {
+		            this.blur();
+		            this.focus();
+			});
+		}
+	});
+
+	$("#index").on("keyup",function(){
+		$(this).val($(this).val().replace(/[^0-9-]+/,''));
+		if($(this).val().length == 1){
+			$(this).val() == '0' ? $(this).val('1') : $(this).val();
+		}
+	});
+
+	$("#index").on("keydown",function(){
+		$(this).val($(this).val().replace(/[^0-9-]+/,''));
+		if($(this).val().length == 1){
+			$(this).val() == '0' ? $(this).val('1') : $(this).val();
+		}
+	});
+
+});
+
+</script>
+<script>
+var sidconf = '<div id="sidconf"><br>&nbsp;&nbsp;' +
+	'<input class="button addlist" type="radio" name="enable" value="true" onclick="selectenable()"  checked="checked">enable'+
+	'&nbsp;<input class="button addlist" type="radio" name="enable" value="false" onclick="selectenable()">disable' +
+	'<br>&nbsp;&nbsp;*index:'+
+	'<input class="button value" type="text" name="index" id="index">'+
+	'<br>&nbsp;&nbsp;*stream handle:'+
+	'<input class="button value" type="text" name="streamhandle" id="streamhandle" onkeydown=octkeydown(this) onkeyup=octkeyup(this)>'+
+	'<br>&nbsp;&nbsp;*filter type:'+
+	'<select class="button device" id="sidtypeselect" name="sidtypeselect" onchange="choosesidtype()">'+
+	'<option value="null" selected>destinate mac</option>'+
+	'<option value="source-mac-and-vlan">source mac</option>'+
+	'</select>'+
+	'<br>&nbsp;&nbsp;*mac address:<br>&nbsp;&nbsp;&nbsp;&nbsp;'+
+	'<input name=mac1 id="mac1" class="button macinput" maxlength=2 onkeydown=keyDownEvent(this) onkeyup=keyUpEvent(mac1,mac1,mac2)>:'+
+	'<input name=mac2 id="mac2" class="button macinput" maxlength=2 onkeydown=keyDownEvent(this) onkeyup=keyUpEvent(mac1,mac2,mac3)>:'+
+	'<input name=mac3 id="mac3" class="button macinput" maxlength=2 onkeydown=keyDownEvent(this) onkeyup=keyUpEvent(mac2,mac3,mac4)>:'+
+	'<input name=mac4 id="mac4" class="button macinput" maxlength=2 onkeydown=keyDownEvent(this) onkeyup=keyUpEvent(mac3,mac4,mac5)>:'+
+	'<input name=mac5 id="mac5" class="button macinput" maxlength=2 onkeydown=keyDownEvent(this) onkeyup=keyUpEvent(mac4,mac5,mac6)>:'+
+	'<input name=mac6 id="mac6" class="button macinput" maxlength=2 onkeydown=keyDownEvent(this) onkeyup=keyUpEventForMac6(mac5,mac6)>'+
+	'<input name =macvalue TYPE="hidden">'+
+	'<br>&nbsp;&nbsp;*vlan type:'+
+	'<br>&nbsp;&nbsp;'+
+	'<input class="button addlist" type="radio" name="vidtype" value="tagged" onclick="selectvidtype()">vid none 0'+
+	'&nbsp;<input class="button addlist" type="radio" name="vidtype" value="priority" onclick="selectvidtype()">vid=0'+
+	'&nbsp;<input class="button addlist" type="radio" name="vidtype" value="all" onclick="selectvidtype()" checked="checked">vid ignore'+
+	'<div id="aftermustvid"></div>'+
+	'</div>';
+
+var sficonf = '<div id="sficonf"><br>&nbsp;&nbsp;' +
+	'<input class="button addlist" type="radio" name="enable" value="true" onclick="selectenable()"  checked="checked">enable'+
+	'&nbsp;<input class="button addlist" type="radio" name="enable" value="false" onclick="selectenable()">disable' +
+	'<br>&nbsp;&nbsp;*index:'+
+	'<input class="button value" type="text" name="index" id="index">'+
+	'<br>&nbsp;&nbsp;*stream handle:'+
+	'<input class="button value" type="text" name="streamhandlesfi" id="streamhandlesfi" onkeydown=octkeydown(this) onkeyup=octkeyup(this)>'+
+	'<br>&nbsp;&nbsp;*stream gate index:'+
+	'<input class="button value" type="text" name="gateid" id="gateid" onkeydown=octkeydown(this) onkeyup=octkeyup(this)>'+
+	'<br>&nbsp;&nbsp;&nbsp;flow meter index:'+
+	'<input class="button value" type="text" name="flowmeterid" id="flowmeterid" onkeydown=octkeydown(this) onkeyup=octkeyup(this)>'+
+	'<br>&nbsp;&nbsp;&nbsp;priority:'+
+	'<input class="button value" type="text" name="priority" id="priority" onkeydown=octkeydown(this) onkeyup=octkeyup(this)>' +
+	'</div>';
+
+var sgiconf = '<div id="sgiconf"><br>&nbsp;&nbsp;'+
+	'<input class="button addlist" type="radio" name="enable" value="true" onclick="selectenable()"  checked="checked">enable'+
+	'&nbsp;<input class="button addlist" type="radio" name="enable" value="false" onclick="selectenable()">disable' +
+	'<br>&nbsp;&nbsp;*index:'+
+	'<input class="button value" type="text" name="index" id="index">'+
+	'<br>&nbsp;&nbsp;&nbsp;initial gate state:'+
+	'<input class="button addlist" type="radio" name="initgate" value="open" onclick="selectinitgate()"  checked="checked">open'+
+	'&nbsp;<input class="button addlist" type="radio" name="initgate" value="closed" onclick="selectinitgate()">close' +
+	'<br>&nbsp;&nbsp;&nbsp;initial ipv:'+
+	'<input class="button short" type="text" name="initipv" id="initipv" maxlength=1 onkeydown=octkeydown(this) onkeyup=octkeyup(this)>'+
+	'<br>&nbsp;&nbsp;&nbsp;basetime:'+
+	'<input class="button value" type="text" name="basetime" id="basetime">'+
+	'<div class="button" ><div id="entry0">'+
+	'<input class="button addlist" type="radio" name="gate0" value="open" onclick="selectinitgate()"  checked="checked">open'+
+	'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input class="button addlist" type="radio" name="gate0" value="closed" onclick="selectinitgate()">close' +
+	'&nbsp;&nbsp;&nbsp;<br>period:<input class="button value" type="text" name="period" id="p0" onkeydown=octkeydown(this) onkeyup=octkeyup(this)>' +
+	'&nbsp;&nbsp;&nbsp;ipv:<input class="button short" type="text" name="ipv" id="ipv0" maxlength=1></div>' +
+	'<input class="button addlist" type="button" name="addlist" id="addlist" onclick="addgateentry()" value="+">'+
+	'</div>'+
+	'</div>';
+
+var fmiconf = '<div id="fmiconf"><br>&nbsp;&nbsp;'+
+	'<input class="button addlist" type="radio" name="enable" value="true" onclick="selectenable()"  checked="checked">enable'+
+	'&nbsp;<input class="button addlist" type="radio" name="enable" value="false" onclick="selectenable()">disable' +
+	'<br>&nbsp;&nbsp;*index:'+
+	'<input class="button value" type="text" name="index" id="index">'+
+	'<br>&nbsp;&nbsp;&nbsp;cir:'+
+	'<input class="button value" type="text" name="cir" id="cir" onkeydown=octkeydown(this) onkeyup=octkeyup(this)>'+
+	'<br>&nbsp;&nbsp;&nbsp;cbs:'+
+	'<input class="button value" type="text" name="cbs" id="cbs" onkeydown=octkeydown(this) onkeyup=octkeyup(this)>'+
+	'<br>&nbsp;&nbsp;&nbsp;cir:'+
+	'<input class="button value" type="text" name="eir" id="eir" onkeydown=octkeydown(this) onkeyup=octkeyup(this)>'+
+	'<br>&nbsp;&nbsp;&nbsp;cbs:'+
+	'<input class="button value" type="text" name="ebs" id="ebs" onkeydown=octkeydown(this) onkeyup=octkeyup(this)>'+
+	'<br>&nbsp;&nbsp;&nbsp;'+
+	'<input class="checkbox" name="fmiopt" type="checkbox" onchange="fmioption(this)" value="cf" />couple flag'+
+	'<br>&nbsp;&nbsp;&nbsp;'+
+        '<input class="checkbox" name="fmiopt" type="checkbox" onchange="fmioption(this)" value="cm" />color blind'+
+	'<br>&nbsp;&nbsp;&nbsp;'+
+	'<input class="checkbox" name="fmiopt" type="checkbox" onchange="fmioption(this)" value="dropyellow" />drop yellow'+
+	'<br>&nbsp;&nbsp;&nbsp;'+
+        '<input class="checkbox" name="fmiopt" type="checkbox" onchange="fmioption(this)" value="markred" />mark red'+
+	'</div>';
+
+</script>
+
 </head>
 <body>
-<h1>Not support setting Qci</h1>
+<script>
+var portname = 'eno0';
+var gatelist = [0];
+var index = 0;
+var enable = 'true';
+var typetagged = 'all';
+var currentpage = 'sid';
+var fmioptions = {cf: false, cm: false, dropyellow: false, markred:false};
+var initgate = 'open';
+
+function choosport()
+{
+	var checkValue = $("#portselect").val();
+	portname = checkValue;
+}
+
+function selectenable()
+{
+	var radioVal = $('input:radio[name="enable"]:checked').val();
+	enable = radioVal;
+}
+
+function selectinitgate()
+{
+	var radioVal = $('input:radio[name="initgate"]:checked').val();
+	initgate = radioVal;
+}
+
+function selectvidtype()
+{
+	var radioVal = $('input:radio[name="vidtype"]:checked').val();
+	if (radioVal == 'tagged') {
+		$('#aftermustvid').after('<div id="vlanidvalue">&nbsp;&nbsp;*vlan id:<input class="button value" type="text" name="vid" id="vid" onkeydown=octkeydown(this) onkeyup=octkeyup(this)></div>');
+	} else {
+		$('#vlanidvalue').remove();
+	}
+
+	if (radioVal == 'priority') {
+		typetagged = 'priority';
+	} else {
+		typetagged = 'tagged';
+	}
+}
+
+function choosesidtype()
+{
+	console.log($("#sidtypeselect").val());
+	var checkValue = $("#sidtypeselect").val();
+}
+
+function delgateentry(indexp)
+{
+	var buttondash = "dellist"+indexp;
+	var entryp = "entry"+indexp;
+	var returnp = "return"+indexp;
+	$("#"+buttondash).remove();
+	$("#"+entryp).remove();
+	$("#"+returnp).remove();
+	gatelist.remove(indexp);
+	console.log(gatelist);
+}
+
+function addgateentry()
+{
+	var indexplus =  index + 1;
+	$('#addlist').before(	'<input class="button addlist" type="button" name="dellist"'+
+	'id="dellist'+index+'"	onclick="delgateentry('+index+')" value="-">'+
+	'<br id="return'+index+'">'+
+	'<div id="entry'+indexplus+'">'+
+	'<input class="button addlist" type="radio" name="gate'+indexplus+
+	'" value="open" onclick="selectinitgate(this)"  checked="checked">open'+
+	'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input class="button addlist" type="radio" name="gate'+indexplus+
+	'" value="closed" onclick="selectinitgate(this)">close' +
+	'&nbsp;&nbsp;&nbsp;<br>period:<input class="button value" type="text" name="period" id="p'+indexplus+
+	'" onkeydown=octkeydown(this) onkeyup=octkeyup(this)>' +
+	'&nbsp;&nbsp;&nbsp;ipv:<input class="button short" type="text" maxlength=1 name="ipv" id="ipv'+indexplus+
+	'" onkeydown=octkeydown(this) onkeyup=octkeyup(this)>'+
+	'</div>');
+	index += 1;
+	gatelist.push(indexplus);
+	console.log(gatelist);
+}
+
+function fmioption(obj)
+{
+	if ($(obj).prop('checked') == true) {
+		console.log($(obj).val()+"checked");
+	} else {
+		console.log($(obj).val()+"checkout");
+	}
+
+	fmioptions[$(obj).val()] = $(obj).prop('checked');
+	console.log(fmioptions);
+}
+
+function selectpart()
+{
+	var checkVal = $('#selectsection').val();
+	if (checkVal == 'sid') {
+		console.log("sid select");
+		$('#afterselsection').after(sidconf);
+		$('#sficonf').remove();
+		$('#sgiconf').remove();
+		$('#fmiconf').remove();
+	} else if (checkVal == 'sfi') {
+		$('#afterselsection').after(sficonf);
+		$('#sidconf').remove();
+		$('#sgiconf').remove();
+		$('#fmiconf').remove();
+	} else if (checkVal == 'sgi') {
+		$('#afterselsection').after(sgiconf);
+		$('#sidconf').remove();
+		$('#sficonf').remove();
+		$('#fmiconf').remove();
+	} else if (checkVal == 'fmi') {
+		$('#afterselsection').after(fmiconf);
+		$('#sidconf').remove();
+		$('#sficonf').remove();
+		$('#sgiconf').remove();
+	}
+	enable = 'true';
+	currentpage = checkVal;
+	fmioptions = {cf: false, cm: false, dropyellow: false, markred:false};
+	console.log(currentpage);
+}
+
+function ajexrequest(configdic, url)
+{
+	$.ajax({
+		type: "POST",
+		url: "/"+url,
+		dataType: "json",
+		contentType: "application/json; charset=utf-8",
+		data: JSON.stringify(configdic),
+		success: function(data){
+			if (data.status == 'false')
+				alert('Feedback ERROR!');
+
+			$('#outputcontent', parent.document).append("<pre>"+"editconfig operation: "+data.status+"</pre>");
+			window.parent.showconfig("if:interfaces", data.getconfig);
+			window.parent.showconfig("dot1q:bridges", data.getconfig);
+			window.parent.showconfig("bridges", data.getconfig);
+			window.parent.showconfig("interfaces", data.getconfig);
+			$('#outputcontent', parent.document).append("<pre>"+'-------------------------'+window.parent.counter+'-------------------------'+"</pre>");
+			window.parent.counter += 1;
+		}});
+}
+
+function loadsid()
+{
+	var qcisid = {};
+	var deviceself = window.parent.formgetnameip();
+
+	qcisid["device"] = deviceself['deviceip'];
+	qcisid["port"] = $("#portselect").val();
+	qcisid["index"] = $("#index").val();
+	if (qcisid["index"] == "") {
+		alert("Please input index value");
+		return null;
+	}
+	qcisid["enable"] = $('input:radio[name="enable"]:checked').val();
+
+	if (qcisid["enable"] == 'true') {
+		qcisid["streamhandle"] = $("#streamhandle").val();
+		if (qcisid["streamhandle"] == "") {
+			alert("Please input streamhandle");
+			return null;
+		}
+		qcisid["filtertype"] = $("#sidtypeselect").val();
+		qcisid["macaddr"] = $('#mac1').val()+"-"+
+				 $('#mac2').val() +"-"+ $('#mac3').val() +"-"+
+				 $('#mac4').val() +"-"+ $('#mac5').val() +"-"+
+				 $('#mac6').val();
+		qcisid["vlantype"] = $('input:radio[name="vidtype"]:checked').val();
+		if (qcisid["vlantype"] == 'tagged')
+			qcisid["vlanid"] = $("#vid").val();
+
+		console.log(qcisid["vlanid"]);
+		if (qcisid["vlanid"] == "") {
+			alert("Please input a none zero valn id");
+			return null;
+		}
+
+	}
+	console.log(qcisid);
+	ajexrequest(qcisid, "qcisidset");
+}
+
+function loadsfi()
+{
+	var qcisfi = {};
+	var deviceself = window.parent.formgetnameip();
+
+	qcisfi["device"] = deviceself['deviceip'];
+	qcisfi["port"] = $("#portselect").val();
+	qcisfi["index"] = $("#index").val();
+	if (qcisfi["index"] == "") {
+		alert("Please input index value");
+		return null;
+	}
+	qcisfi["enable"] = $('input:radio[name="enable"]:checked').val();
+
+	if (qcisfi["enable"] == 'true') {
+		if ($("#streamhandlesfi").val() != "") {
+			qcisfi["streamhandle"] = $("#streamhandlesfi").val();
+		}
+		if ($("#gateid").val() == "") {
+			alert("must input gate index id");
+			return null;
+		}
+		qcisfi["gateid"] = $("#gateid").val();
+		if ($("#flowmeterid").val() != "")
+			qcisfi["flowmeterid"] = $("#flowmeterid").val();
+
+		if ($("#priority").val() != "") {
+			qcisfi["priority"] = $("#priority").val();
+			if (parseInt(qcisfi["priority"]) > 7) {
+				alert("input priority should be range in 0-7");
+				return null;
+			}
+		}
+	}
+	qcisfi["whichpart"] = 'sfi';
+	console.log(qcisfi);
+	ajexrequest(qcisfi, "qciset");
+}
+
+function loadsgi()
+{
+	var qcisgi = {};
+	var deviceself = window.parent.formgetnameip();
+
+	qcisgi["device"] = deviceself['deviceip'];
+	qcisgi["port"] = $("#portselect").val();
+	qcisgi["index"] = $("#index").val();
+	if (qcisgi["index"] == "") {
+		alert("Please input index value");
+		return null;
+	}
+	qcisgi["enable"] = $('input:radio[name="enable"]:checked').val();
+
+	if (qcisgi["enable"] == 'true') {
+		qcisgi["entry"] =[];
+		qcisgi["initgate"] = $('input:radio[name="initgate"]:checked').val();
+		var initipv = $("#initipv").val();
+		if (initipv == "") {
+			qcisgi["initipv"] = '-1';
+		} else if (parseInt(initipv) < 8) {
+			qcisgi["initipv"] = initipv;
+		} else {
+			alert("initial ipv should be range 0-7");
+			return null;
+		}
+
+		var basetime = $("input[name='basetime']").val();
+		if (basetime != '') {
+			qcisgi["basetime"] = basetime;
+			if (isNaN(parseInt(basetime))) {
+				alert("Basetime Error!");
+				return;
+			}
+		}
+
+		for (var i = 0, len = gatelist.length; i < len; i++) {
+				var gatep = "gate" + gatelist[i];
+			var periodp = "p" + gatelist[i];
+			var ipvp = "ipv" + gatelist[i];
+
+			var gateopen = $('input:radio[name='+ gatep+']:checked').val();
+
+
+			if (isNaN(parseInt($("#"+periodp).val()))) {
+				alert("Period value Error");
+				return;
+			}
+
+			var ipvvalue = $("#"+ipvp).val();
+			if (ipvvalue == "") {
+				ipvvalue = "-1";
+			}
+			qcisgi["entry"].push({gate: gateopen, period: $("#"+periodp).val(), ipv: ipvvalue});
+		}
+	}
+
+	qcisgi["whichpart"] = 'sgi';
+	console.log(qcisgi);
+	ajexrequest(qcisgi, "qciset");
+
+}
+
+function loadfmi()
+{
+	var qcifmi = {};
+	var deviceself = window.parent.formgetnameip();
+
+	qcifmi["device"] = deviceself['deviceip'];
+	qcifmi["port"] = $("#portselect").val();
+	qcifmi["index"] = $("#index").val();
+	if (qcifmi["index"] == "") {
+		alert("Please input index value");
+		return null;
+	}
+	qcifmi["enable"] = $('input:radio[name="enable"]:checked').val();
+
+	if (qcifmi["enable"] == 'true') {
+		if ($("#cir").val() != "")
+			qcifmi["cir"] = $("#cir").val();
+		if ($("#cbs").val() != "")
+			qcifmi["cbs"] = $("#cbs").val();
+		if ($("#eir").val() != "")
+			qcifmi["eir"] = $("#eir").val();
+		if ($("#ebs").val() != "")
+			qcifmi["ebs"] = $("#ebs").val();
+		qcifmi = Object.assign(qcifmi, fmioptions);
+	}
+	qcifmi["whichpart"] = 'fmi';
+	console.log(qcifmi);
+	ajexrequest(qcifmi, "qciset");
+}
+
+function confirmset()
+{
+	console.log("yes, confirmset");
+	switch(currentpage) {
+		case 'sid':
+			loadsid();
+			break;
+		case 'sfi':
+			loadsfi();
+			break;
+		case 'sgi':
+			loadsgi();
+			break;
+		case 'fmi':
+			loadfmi();
+			break;
+		default:
+			alert("not support");
+			console.log();
+	}
+}
+
+</script>
+
+<div>
+<form>
+<b>*device:
+<select class="button device" id="portselect" name="portselect" onchange="choosport()">
+	<option value="eno0" selected>eno0</option>
+	<option value="eno2">eno2</option>
+	<option value="eno3">eno3</option>
+	<option value="swp0">swp0</option>
+	<option value="swp1">swp1</option>
+	<option value="swp2">swp2</option>
+	<option value="swp3">swp3</option>
+	<option value="swp4">swp4</option>
+ </select>
+<br><br>
+<select class="button confsection" id="selectsection" name="selectsection" onchange="selectpart()">
+	<option value="sid" selected>stream identify</option>
+	<option value="sfi">stream filter</option>
+	<option value="sgi">stream gate</option>
+	<option value="fmi">flow metering</option>
+</select>
+<br><div id="afterselsection"></div>
+
+
+<!--
+<div>
+	<INPUT TYPE="button" value = "getvalue" onmouseup=getmacvalue(mac1,mac2,mac3,mac4,mac5,mac6,macvalue)>
+</div>
+-->
+<br>
+<b>
+<input class="button device confirm" type="button" name="confirm" id="confirm" onclick="confirmset()" value="Yes, confirm">
+
+</form>
+</div>
 </body>
 </html>

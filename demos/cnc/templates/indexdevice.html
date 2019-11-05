@@ -113,6 +113,29 @@ var deviceip;
 		return {'devicename': devname, 'deviceip': devip}; 
 	}
 
+function showconfig(s, data)
+{
+
+	indexB = data.indexOf("<"+s);
+	console.log(indexB);
+	if (indexB == -1) {
+		console.log("Not found the"+s+" node");
+		return null;
+	}
+	newdata = data.slice(indexB);
+
+	var parameter = window.parent.xmlToJson(newdata);
+	var jsonpara =  jQuery.parseJSON(parameter);
+	if (jsonpara[s] != undefined) {
+		if (jsonpara[s]["parsererror"] != undefined) {
+			delete(jsonpara[s]["parsererror"]);
+			parameter = JSON.stringify(jsonpara, undefined, 4);
+		}
+	}
+
+	$('#outputcontent', parent.document).append("<pre><code>"+parameter+"</code></pre>");
+}
+
 // Changes XML to JSON
 function parseXml(xml) {
    var dom = null;
@@ -205,7 +228,11 @@ function getconfig() {
 		success: function(data){
 			if (data.status == "false")
 				alert('Feedback ERROR!');
-			$('#outputcontent', parent.document).append("<pre><code>"+xmlToJson(data.getconfig)+"</code></pre>");
+			$('#outputcontent', parent.document).append("<pre>"+"getconfig operation: "+data.status+"</pre>");
+			showconfig("if:interfaces", data.getconfig);
+			showconfig("dot1q:bridges", data.getconfig);
+			showconfig("bridges", data.getconfig);
+			showconfig("interfaces", data.getconfig);
 			$('#outputcontent', parent.document).append("<pre>"+"-------------------------"+counter+"-------------------------"+"</pre>");
 			counter += 1;
 		}});

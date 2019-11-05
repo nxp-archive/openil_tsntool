@@ -34,7 +34,7 @@ def prettyXml(element, indent = '\t', newline = '\n', level = 0):
 
 def loadNetconf(xmlstr, device):
     print (xmlstr);
-
+    removeknowhost();
     #start the netconf request
     session = netconf.Session.connect(device, int('830'), str('root'))
     dstype = netconf.RUNNING
@@ -147,6 +147,243 @@ def loadnetconfqbu(configdata):
 
     return loadNetconf(qbuxmlstr, configdata['device']);
 
+def loadncqcisid(configdata):
+    print(configdata);
+    bridges = ET.Element('bridges');
+    bridges.set('xmlns', 'urn:ieee:std:802.1Q:yang:ieee802-dot1q-bridge');
+    bridges.set('xmlns:stream', 'urn:ieee:std:802.1Q:yang:ieee802-dot1q-stream-id');
+    bridge = ET.SubElement(bridges, 'bridge');
+    #we have to judge by port name
+    brname = ET.SubElement(bridge, 'name');
+    if (configdata['port'].find("eno") >= 0):
+        brname.text = 'enetc';
+    else:
+        brname.text = 'switch';
+
+    brtype = ET.SubElement(bridge, 'bridge-type');
+    brtype.text = 'provider-edge-bridge';
+    component = ET.SubElement(bridge, 'component');
+    compname = ET.SubElement(component, 'name');
+    compname.text = configdata['port'];
+
+    comptype = ET.SubElement(component, 'type');
+    comptype.text = 'edge-relay-component';
+    streams = ET.SubElement(component, 'stream:streams');
+    sidtable = ET.SubElement(streams, 'stream:stream-identity-table');
+    index = ET.SubElement(sidtable, 'stream:index');
+    index.text = configdata['index'];
+
+    enable = ET.SubElement(sidtable, 'stream:stream-id-enabled');
+    enable.text = configdata['enable'];
+    if (configdata['enable'] == 'false'):
+        prettyXml(bridges);
+        sidxmlb = ET.tostring(bridges, encoding='utf8', method='xml');
+        sidxmlstr = str(sidxmlb, encoding='utf-8');
+        return loadNetconf(sidxmlstr, configdata['device']);
+
+    streamhandle = ET.SubElement(sidtable, 'stream:stream-handle');
+    streamhandle.text = configdata['streamhandle'];
+    identype = ET.SubElement(sidtable, 'stream:identification-type');
+    identype.text =  configdata['filtertype'];
+    param = ET.SubElement(sidtable, 'stream:parameters');
+    if (configdata['filtertype'] == 'null'):
+        nullpara = ET.SubElement(param, 'stream:null-stream-identification-params');
+        destaddr = ET.SubElement(nullpara, 'stream:dest-address');
+        destaddr.text = configdata['macaddr'];
+        vlantype = ET.SubElement(nullpara, 'stream:vlan-tagged');
+        vlantype.text = configdata['vlantype'];
+        if ('vlanid' in configdata):
+             vlanid = ET.SubElement(nullpara, 'stream:vlan-id');
+             vlanid.text = configdata['vlanid'];
+    elif (configdata['filtertype'] == "source-mac-and-vlan"):
+        srcpara = ET.SubElement(param, 'stream:source-mac-and-vlan-identification-params');
+        destaddr = ET.SubElement(nullpara, 'stream:source-address');
+        destaddr.text = configdata['macaddr'];
+        vlantype = ET.SubElement(nullpara, 'stream:vlan-tagged');
+        vlantype.text = configdata['vlantype'];
+        if ('vlanid' in configdata):
+             vlanid = ET.SubElement(nullpara, 'stream:vlan-id');
+             vlanid.text = configdata['vlanid'];
+    else:
+        print("filter type not supported");
+        return ('false', "filter type not supported");
+
+    prettyXml(bridges);
+    #ET.dump(bridges);
+    sidxmlb = ET.tostring(bridges, encoding='utf8', method='xml');
+    sidxmlstr = str(sidxmlb, encoding='utf-8');
+
+    return loadNetconf(sidxmlstr, configdata['device']);
+
+def createsfixml(component, configdata):
+    streamfilter = ET.SubElement(component, 'sfsg:stream-filters');
+    sfitable = ET.SubElement(streamfilter, 'sfsg:stream-filter-instance-table');
+    index = ET.SubElement(sfitable, 'sfsg:stream-filter-instance-id');
+    index.text = configdata['index'];
+    enable = ET.SubElement(sfitable, 'qci-augment:stream-filter-enabled');
+    enable.text = configdata['enable'];
+    if (configdata['enable'] == 'false'):
+        return
+
+    if (configdata.__contains__('streamhandle')):
+        streamhandle = ET.SubElement(sfitable, 'sfsg:stream-handle');
+        streamhandle.text = configdata['streamhandle'];
+    else:
+        streamhandle = ET.SubElement(sfitable, 'sfsg:wildcard');
+
+    prio = ('zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven');
+    priority = ET.SubElement(sfitable, 'sfsg:priority-spec');
+    if (configdata.__contains__('priority')):
+        priority.text = prio[int(configdata['priority'])];
+    else:
+        priority.text = 'wildcard';
+
+    gateid = ET.SubElement(sfitable, 'sfsg:stream-gate-ref');
+    gateid.text = configdata['gateid'];
+
+    filterspec = ET.SubElement(sfitable, 'sfsg:filter-specification-list');
+    findex = ET.SubElement(filterspec, 'sfsg:index');
+    findex.text = '0';
+
+    if (configdata.__contains__('flowmeterid')):
+        fmiid = ET.SubElement(filterspec, 'sfsg:flow-meter-ref');
+        fmiid.text = configdata['flowmeterid'];
+
+def createsgixml(component, configdata):
+    streamgate = ET.SubElement(component, 'sfsg:stream-gates');
+    sgitable =  ET.SubElement(streamgate, 'sfsg:stream-gate-instance-table');
+    index = ET.SubElement(sgitable, 'sfsg:stream-gate-instance-id');
+    index.text = configdata['index'];
+    gateen = ET.SubElement(sgitable, 'sfsg:gate-enable');
+    gateen.text = configdata['enable'];
+    if (configdata['enable'] == 'false'):
+        return;
+
+    prio = ('zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven');
+
+    initgate = ET.SubElement(sgitable, 'sfsg:admin-gate-states');
+    initgate.text = configdata['initgate'];
+    initipv = ET.SubElement(sgitable, 'sfsg:admin-ipv');
+    intinitipv = int(configdata['initipv']);
+    if (intinitipv >= 0 and intinitipv < 8) :
+        initipv.text = prio[intinitipv];
+    else :
+        initipv.text = 'wildcard';
+
+    listlength =ET.SubElement(sgitable, 'psfp:admin-control-list-length');
+    listlength.text = str(len(configdata['entry']));
+    for i in range(len(configdata['entry'])):
+        adminlist = ET.SubElement(sgitable, 'psfp:admin-control-list');
+        entryindex = ET.SubElement(adminlist, 'psfp:index');
+        entryindex.text = str(i);
+        ename = ET.SubElement(adminlist, 'psfp:operation-name');
+        ename.text = 'set-gate-and-ipv';
+        cyclepara = ET.SubElement(adminlist, 'psfp:parameters');
+        egate = ET.SubElement(cyclepara, 'psfp:gate-state-value');
+        egate.text = configdata['entry'][i]['gate'];
+        eti = ET.SubElement(cyclepara, 'psfp:time-interval-value');
+        eti.text = configdata['entry'][i]['period'];
+        einitipv = ET.SubElement(cyclepara, 'psfp:ipv-value');
+        eintinitipv = int(configdata['entry'][i]['ipv']);
+        if (eintinitipv >= 0 and eintinitipv < 8) :
+            einitipv.text = prio[eintinitipv];
+        else:
+            einitipv.text = 'wildcard';
+
+    if configdata.__contains__('basetime'):
+        xs,zs=math.modf(float(configdata['basetime']));
+        xsstr = str(xs).split('.');
+        if (len(xsstr[1]) > 8):
+            xshu = xsstr[1][0:9];
+        else:
+            xshu = xsstr[1].ljust(9, '0');
+        basetime = ET.SubElement(sgitable, 'psfp:admin-base-time');
+        seconds = ET.SubElement(basetime, 'psfp:seconds');
+        seconds.text = str(int(zs));
+        fragseconds = ET.SubElement(basetime, 'psfp:fractional-seconds');
+        fragseconds.text = xshu;
+
+def createfmixml(component, configdata):
+    flowmeter= ET.SubElement(component, 'psfp:flow-meters');
+    fmitable =  ET.SubElement(flowmeter, 'psfp:flow-meter-instance-table');
+    index = ET.SubElement(fmitable, 'psfp:flow-meter-instance-id');
+    index.text = configdata['index'];
+    enable = ET.SubElement(fmitable, 'qci-augment:flow-meter-enabled');
+    enable.text = configdata['enable'];
+    if (configdata['enable'] == 'false'):
+        return;
+
+    if configdata.__contains__('cir'):
+        cir = ET.SubElement(fmitable, 'psfp:committed-information-rate');
+        cir.text = configdata['cir'];
+    if configdata.__contains__('cbs'):
+        cbs = ET.SubElement(fmitable, 'psfp:committed-burst-size');
+        cbs.text = configdata['cbs'];
+    if configdata.__contains__('eir'):
+        eir = ET.SubElement(fmitable, 'psfp:excess-information-rate');
+        eir.text = configdata['eir'];
+    if configdata.__contains__('ebs'):
+        ebs = ET.SubElement(fmitable, 'psfp:excess-burst-size');
+        ebs.text = configdata['ebs'];
+
+    cf = ET.SubElement(fmitable, 'psfp:coupling-flag');
+    if (configdata['cf'] == True):
+        cf.text = 'one';
+    else:
+        cf.text = 'zero';
+
+    cm = ET.SubElement(fmitable, 'psfp:color-mode');
+    if (configdata['cm'] == True):
+        cm.text = 'color-blind';
+    else:
+        cm.text = 'color-aware';
+
+    dropyellow = ET.SubElement(fmitable, 'psfp:drop-on-yellow');
+    if (configdata['dropyellow'] == True):
+        dropyellow.text = 'true';
+    else:
+        dropyellow.text = 'false';
+
+def loadncqciset(configdata):
+    print(configdata);
+    bridges = ET.Element('bridges');
+    bridges.set('xmlns', 'urn:ieee:std:802.1Q:yang:ieee802-dot1q-bridge');
+    bridges.set('xmlns:sfsg', 'urn:ieee:std:802.1Q:yang:ieee802-dot1q-stream-filters-gates');
+    bridges.set('xmlns:psfp', 'urn:ieee:std:802.1Q:yang:ieee802-dot1q-psfp');
+    bridges.set('xmlns:qci-augment', 'urn:ieee:std:802.1Q:yang:ieee802-dot1q-qci-augment');
+
+    bridge = ET.SubElement(bridges, 'bridge');
+    #we have to judge by port name
+    brname = ET.SubElement(bridge, 'name');
+    if (configdata['port'].find("eno") >= 0):
+        brname.text = 'enetc';
+    else:
+        brname.text = 'switch';
+
+    brtype = ET.SubElement(bridge, 'bridge-type');
+    brtype.text = 'provider-edge-bridge';
+    component = ET.SubElement(bridge, 'component');
+    compname = ET.SubElement(component, 'name');
+    compname.text = configdata['port'];
+
+    comptype = ET.SubElement(component, 'type');
+    comptype.text = 'edge-relay-component';
+
+    if (configdata['whichpart'] == 'sfi'):
+        createsfixml(component, configdata);
+    elif (configdata['whichpart'] == 'sgi'):
+        createsgixml(component, configdata);
+    elif (configdata['whichpart'] == 'fmi'):
+        createfmixml(component, configdata);
+    else:
+         print("No this config: %s"%(configdata['whichpart']));
+
+    prettyXml(bridges);
+    qcixmlb = ET.tostring(bridges, encoding='utf8', method='xml');
+    qcixmlstr = str(qcixmlb, encoding='utf-8');
+
+    return loadNetconf(qcixmlstr, configdata['device']);
+
 def loadgetconfig(configdata):
     removeknowhost();
     session = netconf.Session.connect(configdata['device'], int('830'), str('root'))
@@ -168,7 +405,7 @@ def index():
 def configdeviceHTML():
     deviceip = request.args.get('ip');
     #ret = devauthorize(deviceip);
-    removeknowhost();
+    #removeknowhost();
     return render_template('indexdevice.html')
 
 @app.route('/configQbvHTML')
@@ -197,6 +434,30 @@ def qbuset():
        tojson = request.get_json();
        status, ret = loadnetconfqbu(tojson);
        print (ret);
+    except Exception:
+       status = 'false';
+       return jsonify({"status": status, "getconfig": ''});
+       raise exceptions.WrongParametersException
+    return jsonify({"status": status, "getconfig":str(ret)});
+
+@app.route('/qcisidset', methods=['POST'])
+def qcisidset():
+    try:
+        tojson = request.get_json();
+        status, ret = loadncqcisid(tojson);
+        print(ret);
+    except Exception:
+       status = 'false';
+       return jsonify({"status": status, "getconfig": ''});
+       raise exceptions.WrongParametersException
+    return jsonify({"status": status, "getconfig":str(ret)});
+
+@app.route('/qciset', methods=['POST'])
+def qciset():
+    try:
+        tojson = request.get_json();
+        status, ret = loadncqciset(tojson);
+        print(ret);
     except Exception:
        status = 'false';
        return jsonify({"status": status, "getconfig": ''});

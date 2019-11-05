@@ -8,6 +8,7 @@
 #include <netlink/genl/ctrl.h>
 #include <netlink/genl/genl.h>
 #include <netlink/netlink.h>
+#include <sys/file.h>
 #include "tsn/genl_tsn.h"
 #include <errno.h>
 
@@ -273,6 +274,154 @@ void get_para_from_json(int type, cJSON *json, void *para)
 	}
 }
 
+#ifdef CONF_MONITOR
+#define TSN_MON_FILE "/tmp/tsn-oper-record.json"
+bool conf_monitor_switch = TRUE;
+
+void create_record(char *portname, int cmd, uint32_t index)
+{
+	FILE *fp;
+	char *buf;
+	pid_t pid;
+	cJSON *json = NULL;
+	cJSON *item = NULL;
+	struct tsn_conf_record record;
+
+	if (!portname)
+		return;
+
+	sprintf(record.portname, portname);
+	record.cmd = cmd;
+	record.para = index;
+	
+	errno = 0;
+	fp = fopen(TSN_MON_FILE, "w");
+	if (!fp) {
+		lloge("open '%s' failed: %s", TSN_MON_FILE,
+		      strerror(errno));
+		return;
+	}
+	errno = 0;
+	if (flock(fp->_fileno, LOCK_EX) == -1) {
+		lloge("lock '%s' failed: %s", TSN_MON_FILE,
+		      strerror(errno));
+		fclose(fp);
+		return;
+	}
+	json = cJSON_CreateObject();
+	if (!json) {
+		lloge("create cJSON object failed!");
+		fclose(fp);
+		return;
+	}
+	item = cJSON_CreateNumber((double)getpid());
+	cJSON_AddItemToObject(json, "pid", item);
+	item = cJSON_CreateString(record.portname);
+	cJSON_AddItemToObject(json, "port", item);
+	item = cJSON_CreateNumber((double)record.cmd);
+	cJSON_AddItemToObject(json, "command", item);
+	item = cJSON_CreateNumber((double)record.para);
+	cJSON_AddItemToObject(json, "parameter", item);
+	buf = cJSON_Print(json);
+	fwrite(buf, strlen(buf), 1, fp);
+	free(buf);
+	cJSON_Delete(json);
+	flock(fp->_fileno, LOCK_UN);
+	fclose(fp);
+}
+
+int get_tsn_record(struct tsn_conf_record *record)
+{
+	FILE *fp;
+	cJSON *json = NULL;
+	cJSON *item = NULL;
+	char *json_data;
+	int len = 0;
+
+	errno = 0;
+	fp = fopen(TSN_MON_FILE, "r");
+	if (!fp) {
+		lloge("open '%s' failed: %s", TSN_MON_FILE,
+		      strerror(errno));
+		return -1;
+	}
+	errno = 0;
+	if (flock(fp->_fileno, LOCK_EX) == -1) {
+		lloge("lock '%s' failed: %s", TSN_MON_FILE,
+		      strerror(errno));
+		fclose(fp);
+		return -1;
+	}
+	fseek(fp, 0, SEEK_END);
+	len = ftell(fp);
+	fseek(fp, 0, SEEK_SET);
+	json_data = (char *)malloc(len + 1);
+	if (json_data) {
+		fread(json_data, 1, len, fp);
+		json = cJSON_Parse(json_data);
+		if (!json) {
+			lloge("json parse error");
+			free(json_data);
+			flock(fp->_fileno, LOCK_UN);
+			fclose(fp);
+			return -1;
+		}
+	} else {
+		lloge("malloc error");
+		flock(fp->_fileno, LOCK_UN);
+		fclose(fp);
+		return -1;
+	}
+	item = cJSON_GetObjectItem(json, "pid");
+	if (!item) {
+		lloge("get pid failed!");
+		cJSON_Delete(json);
+		return -1;
+	}
+	record->pid = (__u32)(item->valuedouble);
+	item = cJSON_GetObjectItem(json, "port");
+	if (!item) {
+		lloge("get port failed!");
+		cJSON_Delete(json);
+		return -1;
+	}
+	sprintf(record->portname, item->valuestring);
+	item = cJSON_GetObjectItem(json, "command");
+	if (!item) {
+		lloge("get command failed!");
+		cJSON_Delete(json);
+		return -1;
+	}
+	record->cmd = (__u32)item->valuedouble;
+	item = cJSON_GetObjectItem(json, "parameter");
+	if (!item) {
+		lloge("get parameter failed!");
+		cJSON_Delete(json);
+		return -1;
+	}
+	record->para = (__u32)item->valuedouble;
+	cJSON_Delete(json);
+	flock(fp->_fileno, LOCK_UN);
+	fclose(fp);
+	return 0;
+}
+#else
+bool conf_monitor_switch = FALSE;
+
+int get_tsn_record(struct tsn_conf_record *record)
+{
+	return -1;
+}
+
+void create_record(char *portname, int cmd, uint32_t index)
+{
+}
+#endif
+
+bool get_conf_monitor_status(void)
+{
+	return conf_monitor_switch;
+}
 
 /* tsn_capability_get()
  * To get the device's tsn capabilities
@@ -469,7 +618,11 @@ sendmsg1:
 		return ret;
 	}
 
-	return tsn_msg_recv_analysis(NULL, NULL);
+	ret = tsn_msg_recv_analysis(NULL, NULL);
+	if (ret >= 0 && get_conf_monitor_status())
+		create_record(portname, TSN_CMD_CB_STREAMID_SET, sid_index);
+
+	return ret;
 err:
 	free(msg);
 	return -EINVAL;
@@ -620,8 +773,11 @@ sendmsg1:
 		return ret;
 	}
 
-	return tsn_msg_recv_analysis(NULL, NULL);
+	ret = tsn_msg_recv_analysis(NULL, NULL);
+	if (ret >= 0 && get_conf_monitor_status())
+		create_record(portname, TSN_CMD_QCI_SFI_SET, sfi_handle);
 
+	return ret;
 err:
 	free(msg);
 	return -EINVAL;
@@ -865,7 +1021,11 @@ out2:
 		return ret;
 	}
 
-	return tsn_msg_recv_analysis(NULL, NULL);
+	ret = tsn_msg_recv_analysis(NULL, NULL);
+	if (ret >= 0 && get_conf_monitor_status())
+		create_record(portname, TSN_CMD_QCI_SGI_SET, sgi_handle);
+
+	return ret;
 }
 
 int tsn_qci_psfp_sgi_get(char *portname, uint32_t sgi_handle, struct tsn_qci_psfp_sgi_conf *sgi)
@@ -1025,7 +1185,11 @@ sendmsg:
 		return ret;
 	}
 
-	return tsn_msg_recv_analysis(NULL, NULL);
+	ret = tsn_msg_recv_analysis(NULL, NULL);
+	if (ret >= 0 && get_conf_monitor_status())
+		create_record(portname, TSN_CMD_QCI_FMI_SET, fmi_id);
+
+	return ret;
 
 err:
 	free(msg);
@@ -1191,7 +1355,11 @@ sendmsg1:
 		return ret;
 	}
 
-	return tsn_msg_recv_analysis(NULL, NULL);
+	ret = tsn_msg_recv_analysis(NULL, NULL);
+	if (ret >= 0 && get_conf_monitor_status())
+		create_record(portname, TSN_CMD_QBV_SET, 0);
+
+	return ret;
 }
 
 /* tsn_qos_port_gce_conf_get()
@@ -1302,7 +1470,11 @@ int tsn_cbs_set(char *portname, uint8_t tc, uint8_t percent)
 		return ret;
 	}
 
-	return tsn_msg_recv_analysis(NULL, NULL);
+	ret = tsn_msg_recv_analysis(NULL, NULL);
+	if (ret >= 0 && get_conf_monitor_status())
+		create_record(portname, TSN_CMD_CBS_SET, 0);
+
+	return ret;
 }
 
 int tsn_cbs_get(char *portname, uint8_t tc)
@@ -1380,7 +1552,11 @@ int tsn_tsd_set(char *portname, bool enable, uint32_t period, uint32_t frame_num
 		return ret;
 	}
 
-	return tsn_msg_recv_analysis(NULL, NULL);
+	ret = tsn_msg_recv_analysis(NULL, NULL);
+	if (ret >= 0 && get_conf_monitor_status())
+		create_record(portname, TSN_CMD_TSD_SET, 0);
+
+	return ret;
 }
 
 int tsn_tsd_get(char *portname)
@@ -1448,7 +1624,11 @@ int tsn_qbu_set(char *portname, uint8_t pt_vector)
 		return ret;
 	}
 
-	return tsn_msg_recv_analysis(NULL, NULL);
+	ret = tsn_msg_recv_analysis(NULL, NULL);
+	if (ret >= 0 && get_conf_monitor_status())
+		create_record(portname, TSN_CMD_QBU_SET, 0);
+
+	return ret;
 }
 
 int tsn_qbu_get_status(char *portname, struct tsn_preempt_status *pts)
@@ -1513,7 +1693,11 @@ int tsn_ct_set(char *portname, uint8_t pt_vector)
 		return ret;
 	}
 
-	return tsn_msg_recv_analysis(NULL, NULL);
+	ret = tsn_msg_recv_analysis(NULL, NULL);
+	if (ret >= 0 && get_conf_monitor_status())
+		create_record(portname, TSN_CMD_CT_SET, 0);
+
+	return ret;
 }
 
 int tsn_cbgen_set(char *portname, uint32_t index,
@@ -1557,7 +1741,11 @@ int tsn_cbgen_set(char *portname, uint32_t index,
 		return ret;
 	}
 
-	return tsn_msg_recv_analysis(NULL, NULL);
+	ret = tsn_msg_recv_analysis(NULL, NULL);
+	if (ret >= 0 && get_conf_monitor_status())
+		create_record(portname, TSN_CMD_CBGEN_SET, index);
+
+	return ret;
 }
 
 int tsn_cbrec_set(char *portname, uint32_t index,
@@ -1600,7 +1788,11 @@ int tsn_cbrec_set(char *portname, uint32_t index,
 		return ret;
 	}
 
-	return tsn_msg_recv_analysis(NULL, NULL);
+	ret = tsn_msg_recv_analysis(NULL, NULL);
+	if (ret >= 0 && get_conf_monitor_status())
+		create_record(portname, TSN_CMD_CBREC_SET, index);
+
+	return ret;
 }
 
 int tsn_cbstatus_get(char *portname, uint32_t index,
@@ -1689,5 +1881,9 @@ int tsn_dscp_set(char *portname, bool disable, int index,
 		return ret;
 	}
 
-	return tsn_msg_recv_analysis(NULL, NULL);
+	ret = tsn_msg_recv_analysis(NULL, NULL);
+	if (ret >= 0 && get_conf_monitor_status())
+		create_record(portname, TSN_CMD_DSCP_SET, index);
+
+	return ret;
 }
