@@ -13,6 +13,7 @@
 #include <linux/genetlink.h>
 #include <time.h>
 #include <cjson/cJSON.h>
+#include <stdbool.h>
 
 #define MAX_MSGSIZE 256
 #ifndef SOL_NETLINK
@@ -26,11 +27,6 @@
 typedef unsigned char u8;
 typedef unsigned int u32;
 typedef unsigned short u16;
-
-typedef enum boolean {
-	FALSE,
-	TRUE,
-} bool;
 
 #define ptptime_t uint64_t
 #define NUM_THREADS 100

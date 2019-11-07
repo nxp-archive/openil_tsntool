@@ -1836,9 +1836,9 @@ int cli_cmd_tsd_set(UNUSED int argc, UNUSED char *argv[], UNUSED int cmdnumber)
 	int c;
 	int ret;
 	int device = 0;
-	bool enable = TRUE;
+	bool enable = true;
 	uint32_t period = 0, frame_num = 0;
-	bool imme = FALSE;
+	bool imme = false;
 	struct option *long_options = &cli_commands[cmdnumber].long_options[0];
 	int option_index = 0;
 	char portname[IF_NAMESIZE];
@@ -1868,13 +1868,13 @@ int cli_cmd_tsd_set(UNUSED int argc, UNUSED char *argv[], UNUSED int cmdnumber)
 			frame_num = (uint32_t)strtoul(optarg, NULL, ret);
 			break;
 		case 'e':
-			enable = TRUE;
+			enable = true;
 			break;
 		case 'i':
-			imme = TRUE;
+			imme = true;
 			break;
 		case 'q':
-			enable = FALSE;
+			enable = false;
 			break;
 
 		default:

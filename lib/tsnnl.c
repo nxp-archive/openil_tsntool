@@ -276,7 +276,7 @@ void get_para_from_json(int type, cJSON *json, void *para)
 
 #ifdef CONF_MONITOR
 #define TSN_MON_FILE "/tmp/tsn-oper-record.json"
-bool conf_monitor_switch = TRUE;
+bool conf_monitor_switch = true;
 
 void create_record(char *portname, int cmd, uint32_t index)
 {
@@ -406,7 +406,7 @@ int get_tsn_record(struct tsn_conf_record *record)
 	return 0;
 }
 #else
-bool conf_monitor_switch = FALSE;
+bool conf_monitor_switch = false;
 
 int get_tsn_record(struct tsn_conf_record *record)
 {
