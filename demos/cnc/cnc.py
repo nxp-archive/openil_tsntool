@@ -54,6 +54,7 @@ def loadnetconfqbv(configdata):
     interfaces.set('xmlns', 'urn:ietf:params:xml:ns:yang:ietf-interfaces');
     interfaces.set('xmlns:sched', 'urn:ieee:std:802.1Q:yang:ieee802-dot1q-sched');
     interfaces.set('xmlns:preempt', 'urn:ieee:std:802.1Q:yang:ieee802-dot1q-preemption');
+    interfaces.set('xmlns:ianaift', 'urn:ietf:params:xml:ns:yang:iana-if-type');
 
     port = ET.SubElement(interfaces, 'interface');
     iname = ET.SubElement(port, 'name');
@@ -61,6 +62,9 @@ def loadnetconfqbv(configdata):
 
     enable = ET.SubElement(port, 'enabled');
     enable.text = 'true';
+
+    itype = ET.SubElement(port, 'type');
+    itype.text = 'ianaift:ethernetCsmacd';
 
     admin = ET.SubElement(port, 'sched:gate-parameters');
     gate_enable = ET.SubElement(admin, 'sched:gate-enabled');
@@ -126,11 +130,16 @@ def loadnetconfqbu(configdata):
     interfaces = ET.Element('interfaces');
     interfaces.set('xmlns', 'urn:ietf:params:xml:ns:yang:ietf-interfaces');
     interfaces.set('xmlns:preempt', 'urn:ieee:std:802.1Q:yang:ieee802-dot1q-preemption');
+    interfaces.set('xmlns:ianaift', 'urn:ietf:params:xml:ns:yang:iana-if-type');
     port = ET.SubElement(interfaces, 'interface');
     iname = ET.SubElement(port, 'name');
     iname.text = configdata['port'];
     enable = ET.SubElement(port, 'enabled');
     enable.text =  'true';
+
+    itype = ET.SubElement(port, 'type');
+    itype.text = 'ianaift:ethernetCsmacd';
+
     tclist = ET.SubElement(port, 'preempt:frame-preemption-parameters');
 
     for i in range(len(configdata['plist'])):
@@ -155,12 +164,16 @@ def loadncqcisid(configdata):
     bridge = ET.SubElement(bridges, 'bridge');
     #we have to judge by port name
     brname = ET.SubElement(bridge, 'name');
+    brtype = ET.SubElement(bridge, 'bridge-type');
+    address = ET.SubElement(bridge, 'address');
+
     if (configdata['port'].find("eno") >= 0):
         brname.text = 'enetc';
+        address.text = '00-00-00-00-00-01';
     else:
         brname.text = 'switch';
+        address.text = '00-00-00-00-00-02';
 
-    brtype = ET.SubElement(bridge, 'bridge-type');
     brtype.text = 'provider-edge-bridge';
     component = ET.SubElement(bridge, 'component');
     compname = ET.SubElement(component, 'name');
@@ -355,12 +368,16 @@ def loadncqciset(configdata):
     bridge = ET.SubElement(bridges, 'bridge');
     #we have to judge by port name
     brname = ET.SubElement(bridge, 'name');
+    address = ET.SubElement(bridge, 'address');
+    brtype = ET.SubElement(bridge, 'bridge-type');
+
     if (configdata['port'].find("eno") >= 0):
         brname.text = 'enetc';
+        address.text = '00-00-00-00-00-01';
     else:
         brname.text = 'switch';
+        address.text = '00-00-00-00-00-02';
 
-    brtype = ET.SubElement(bridge, 'bridge-type');
     brtype.text = 'provider-edge-bridge';
     component = ET.SubElement(bridge, 'component');
     compname = ET.SubElement(component, 'name');
