@@ -259,7 +259,7 @@ def createsfixml(component, configdata):
     findex.text = '0';
 
     if (configdata.__contains__('flowmeterid')):
-        fmiid = ET.SubElement(filterspec, 'sfsg:flow-meter-ref');
+        fmiid = ET.SubElement(filterspec, 'psfp:flow-meter-ref');
         fmiid.text = configdata['flowmeterid'];
 
 def createsgixml(component, configdata):
@@ -290,7 +290,7 @@ def createsgixml(component, configdata):
         entryindex = ET.SubElement(adminlist, 'psfp:index');
         entryindex.text = str(i);
         ename = ET.SubElement(adminlist, 'psfp:operation-name');
-        ename.text = 'set-gate-and-ipv';
+        ename.text = 'psfp:set-gate-and-ipv';
         cyclepara = ET.SubElement(adminlist, 'psfp:parameters');
         egate = ET.SubElement(cyclepara, 'psfp:gate-state-value');
         egate.text = configdata['entry'][i]['gate'];
