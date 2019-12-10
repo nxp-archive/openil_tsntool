@@ -47,8 +47,8 @@ $(TSN_BIN): $(BIN_DEPS) $(TSN_LIB)
 $(TSN_EVENT): tools/$(TSN_EVENT).o $(TSN_LIB)
 	$(CC) tools/$(TSN_EVENT).o -o tools/$(TSN_EVENT) $(BIN_LDFLAGS)
 
-$(TSTAMP_BIN): tools/$(TSTAMP_BIN).o $(TSN_LIB)
-	$(CC) tools/$(TSTAMP_BIN).o -o tools/$(TSTAMP_BIN) $(BIN_LDFLAGS)
+$(TSTAMP_BIN): tools/$(TSTAMP_BIN).o
+	$(CC) tools/$(TSTAMP_BIN).o -o tools/$(TSTAMP_BIN) -lpthread -lm
 
 lib/%.o: lib/%.c
 	$(CC)  -c $^ -o $@ $(LIB_CFLAGS)

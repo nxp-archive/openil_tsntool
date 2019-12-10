@@ -46,7 +46,16 @@ static int nonstop_flag = 0;
 static int fully_send = 0;
 static int receive_only = 0;
 static int debugen = 0;
+static int delay_us = 0;
+static int send_now = 0;
+#ifndef CLOCK_TAI
+#define CLOCK_TAI                       11
+#endif
 
+#ifndef SCM_TXTIME
+#define SO_TXTIME               61
+#define SCM_TXTIME              SO_TXTIME
+#endif
 #define _DEBUG(file, fmt, ...) do { \
 	if (debugen) { \
 		fprintf(file, " " fmt, \
@@ -73,6 +82,8 @@ void help()
 			-m <source macaddr> \n \
 			-c <frame counts> \n \
 			-p <priority> \n \
+			-b <debug enable> \n \
+			-d <delay us> \n \
 			-h help \
 			\n");
 }
@@ -126,7 +137,60 @@ int str2mac(const char *s, unsigned char mac[MAC_LEN])
 	return 0;
 }
 
-static void sendpacket(int sock, unsigned int length, char *mac)
+static uint64_t gettime_ns(void)
+{
+	struct timespec ts;
+
+	if (clock_gettime(CLOCK_TAI, &ts))
+		printf("error gettime");
+
+	return ts.tv_sec * (1000ULL * 1000 * 1000) + ts.tv_nsec;
+}
+
+static int do_send_one(int fdt, int length)
+{
+	char control[CMSG_SPACE(sizeof(uint64_t))];
+	struct msghdr msg = {0};
+	struct iovec iov = {0};
+	struct cmsghdr *cm;
+	uint64_t tdeliver;
+	int ret;
+	char *buf;
+
+	buf = (char *)malloc(length);
+	memcpy(buf, sync_packet, sizeof(sync_packet));
+
+	iov.iov_base = buf;
+	iov.iov_len = length;
+
+	msg.msg_iov = &iov;
+	msg.msg_iovlen = 1;
+
+	if (delay_us >= 0) {
+		memset(control, 0, sizeof(control));
+		msg.msg_control = &control;
+		msg.msg_controllen = sizeof(control);
+
+		tdeliver = gettime_ns() + delay_us * 1000;
+		printf("set TXTIME is %ld\n", tdeliver);
+		cm = CMSG_FIRSTHDR(&msg);
+		cm->cmsg_level = SOL_SOCKET;
+		cm->cmsg_type = SCM_TXTIME;
+		cm->cmsg_len = CMSG_LEN(sizeof(tdeliver));
+		memcpy(CMSG_DATA(cm), &tdeliver, sizeof(tdeliver));
+	}
+
+	ret = sendmsg(fdt, &msg, 0);
+	if (ret == -1)
+		printf("error write, return error sendmsg!\n");
+	if (ret == 0)
+		printf("error write: 0B");
+
+	free(buf);
+	return ret;
+}
+
+static void sendpacket(int sock, unsigned int length, unsigned char *mac)
 {
 	struct timeval now, nowb;
 	int res;
@@ -142,11 +206,14 @@ static void sendpacket(int sock, unsigned int length, char *mac)
 	if (length < sizeof(sync_packet))
 		res = send(sock, sync_packet, sizeof(sync_packet), 0);
 	else {
+#if 0
 		char *buf = (char *)malloc(length);
 
 		memcpy(buf, sync_packet, sizeof(sync_packet));
 		res = send(sock, buf, length, 0);
 		free(buf);
+#endif
+		res = do_send_one(sock, length);
 	}
 
 	gettimeofday(&now, 0);
@@ -160,13 +227,10 @@ static void sendpacket(int sock, unsigned int length, char *mac)
 }
 
 static void printpacket(struct msghdr *msg, int res,
-			char *data,
-			int sock, int recvmsg_flags)
+			int recvmsg_flags)
 {
 	struct sockaddr_in *from_addr = (struct sockaddr_in *)msg->msg_name;
 	struct cmsghdr *cmsg;
-	struct timeval tv;
-	struct timespec ts;
 	struct timeval now;
 
 	if (debugen)
@@ -254,11 +318,6 @@ static void printpacket(struct msghdr *msg, int res,
 					"probably SO_EE_ORIGIN_TIMESTAMPING"
 #endif
 					);
-				if (res < sizeof(sync))
-					DEBUG(" => truncated data?!");
-				else if (!memcmp(sync, data + res - sizeof(sync),
-							sizeof(sync)))
-					DEBUG(" => GOT OUR DATA BACK (HURRAY!)");
 				break;
 			}
 			case IP_PKTINFO: {
@@ -306,21 +365,18 @@ static void recvpacket(int sock, int recvmsg_flags)
 	msg.msg_controllen = sizeof(control);
 
 	res = recvmsg(sock, &msg, recvmsg_flags | MSG_DONTWAIT);
-	if (res < 0) {
+	if (res < 0)
 		DEBUG("%s %s: %s\n",
 		       "recvmsg",
 		       "regular",
 		       strerror(errno));
-	} else {
-		printpacket(&msg, res, data,
-			    sock, recvmsg_flags);
-	}
+	else
+		printpacket(&msg, res, recvmsg_flags);
 }
 
 void *rcv_pkt(void *data)
 {
-	struct timeval now;
-	int res, i;
+	int res;
 	fd_set readfs, errorfs;
 	int sock;
 
@@ -333,46 +389,61 @@ void *rcv_pkt(void *data)
 		FD_SET(sock, &errorfs);
 
 		res = select(sock + 1, &readfs, 0, &errorfs, NULL);
-/*		gettimeofday(&now, 0);
-		printf("%ld.%06ld: select returned: %d, %s\n",
-		       (long)now.tv_sec, (long)now.tv_usec,
-		       res,
-		       res < 0 ? strerror(errno) : "success");
-*/
 		if (res > 0) {
 			recvpacket(sock, 0);
 			if (!receive_only)
 				recvpacket(sock, MSG_ERRQUEUE);
 		}
 	}
+
+	return 0;
+}
+
+static void setsockopt_txtime(int fd)
+{
+	struct sock_txtime so_txtime_val = {
+			.clockid =  CLOCK_TAI,
+			/*.flags = SOF_TXTIME_DEADLINE_MODE | SOF_TXTIME_REPORT_ERRORS */
+			.flags = SOF_TXTIME_REPORT_ERRORS
+			};
+	struct sock_txtime so_txtime_val_read = { 0 };
+	socklen_t vallen = sizeof(so_txtime_val);
+
+	if (send_now)
+		so_txtime_val.flags |= SOF_TXTIME_DEADLINE_MODE;
+
+	if (setsockopt(fd, SOL_SOCKET, SO_TXTIME,
+		       &so_txtime_val, sizeof(so_txtime_val)))
+		printf("setsockopt txtime error!\n");
+
+	if (getsockopt(fd, SOL_SOCKET, SO_TXTIME,
+		       &so_txtime_val_read, &vallen))
+		printf("getsockopt txtime error!\n");
+
+	if (vallen != sizeof(so_txtime_val) ||
+	    memcmp(&so_txtime_val, &so_txtime_val_read, vallen))
+		printf("getsockopt txtime: mismatch\n");
 }
 
 int main(int argc, char **argv)
 {
 	int so_timestamping_flags = 0;
-	int ip_multicast_loop = 0;
 	char *interface = NULL;
-	int i;
-	int enabled = 1;
 	int sock;
 	struct ifreq device;
 	struct ifreq hwtstamp;
 	struct hwtstamp_config hwconfig, hwconfig_requested;
 	struct sockaddr_ll addr;
-	struct packet_mreq mreq;
 	int val;
-	char mac[MAC_LEN];
+	unsigned char mac[MAC_LEN];
 	socklen_t len;
 	unsigned int length = 0;
 	int c;
-	char *cvalue = NULL;
-	int macflag = 0;
-	int mnum = 0;
 	int count = 1;
 	int prio = 0;
 	pthread_t receive_pkt;
 
-	while ((c = getopt (argc, argv, "dp:i:frl:m:c:h")) != -1) {
+	while ((c = getopt (argc, argv, "nbd:p:i:frl:m:c:h")) != -1) {
 		switch (c)
 		{
 			case 'i':
@@ -388,9 +459,8 @@ int main(int argc, char **argv)
 				length = strtoul(optarg, NULL, 0);
 				break;
 			case 'm':
-				mnum = str2mac(optarg, mac);
-				if (!mnum)
-					macflag = 1;
+				if (str2mac(optarg, mac))
+					printf("error mac input\n");
 				break;
 			case 'c':
 				count = strtoul(optarg, NULL, 0);
@@ -398,17 +468,21 @@ int main(int argc, char **argv)
 			case 'p':
 				prio = strtoul(optarg, NULL, 0);
 				break;
-			case 'd':
+			case 'b':
 				debugen = 1;
+				break;
+			case 'd':
+				delay_us = strtoul(optarg, NULL, 0);
+				break;
+			case 'n':
+				send_now = 1;
 				break;
 			case 'h':
 				help();
-				return;
+				return -1;
 			case '?':
 				if (optopt == 'c')
 					fprintf (stderr, "Option -%c requires an argument.\n", optopt);
-				else if (isprint (optopt))
-					fprintf (stderr, "Unknown option `-%c'.\n", optopt);
 				else
 					fprintf (stderr,
 						"Unknown option character `\\x%x'.\n",
@@ -416,7 +490,7 @@ int main(int argc, char **argv)
 				return 1;
 			default:
 				help();
-				return;
+				return -1;
 		}
 	}
 
@@ -491,6 +565,8 @@ int main(int argc, char **argv)
 			printf("   not the expected value %d\n",
 			       so_timestamping_flags);
 	}
+
+	setsockopt_txtime(sock);
 
 	txcount = count;
 	if (!count)
