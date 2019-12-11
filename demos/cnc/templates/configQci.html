@@ -278,7 +278,7 @@ var sidconf = '<div id="sidconf"><br>&nbsp;&nbsp;' +
 	'<input class="button addlist" type="radio" name="enable" value="true" onclick="selectenable()"  checked="checked">enable'+
 	'&nbsp;<input class="button addlist" type="radio" name="enable" value="false" onclick="selectenable()">disable' +
 	'<br>&nbsp;&nbsp;*index:'+
-	'<input class="button value" type="text" name="index" id="index">'+
+	'<input class="button value" type="text" name="index" id="index" onkeydown=octkeydown(this) onkeyup=octkeyup(this)>'+
 	'<br>&nbsp;&nbsp;*stream handle:'+
 	'<input class="button value" type="text" name="streamhandle" id="streamhandle" onkeydown=octkeydown(this) onkeyup=octkeyup(this)>'+
 	'<br>&nbsp;&nbsp;*filter type:'+
@@ -306,7 +306,7 @@ var sficonf = '<div id="sficonf"><br>&nbsp;&nbsp;' +
 	'<input class="button addlist" type="radio" name="enable" value="true" onclick="selectenable()"  checked="checked">enable'+
 	'&nbsp;<input class="button addlist" type="radio" name="enable" value="false" onclick="selectenable()">disable' +
 	'<br>&nbsp;&nbsp;*index:'+
-	'<input class="button value" type="text" name="index" id="index">'+
+	'<input class="button value" type="text" name="index" id="index" onkeydown=octkeydown(this) onkeyup=octkeyup(this)>'+
 	'<br>&nbsp;&nbsp;*stream handle:'+
 	'<input class="button value" type="text" name="streamhandlesfi" id="streamhandlesfi" onkeydown=octkeydown(this) onkeyup=octkeyup(this)>'+
 	'<br>&nbsp;&nbsp;*stream gate index:'+
@@ -321,7 +321,7 @@ var sgiconf = '<div id="sgiconf"><br>&nbsp;&nbsp;'+
 	'<input class="button addlist" type="radio" name="enable" value="true" onclick="selectenable()"  checked="checked">enable'+
 	'&nbsp;<input class="button addlist" type="radio" name="enable" value="false" onclick="selectenable()">disable' +
 	'<br>&nbsp;&nbsp;*index:'+
-	'<input class="button value" type="text" name="index" id="index">'+
+	'<input class="button value" type="text" name="index" id="index"  onkeydown=octkeydown(this) onkeyup=octkeyup(this)>'+
 	'<br>&nbsp;&nbsp;&nbsp;initial gate state:'+
 	'<input class="button addlist" type="radio" name="initgate" value="open" onclick="selectinitgate()"  checked="checked">open'+
 	'&nbsp;<input class="button addlist" type="radio" name="initgate" value="closed" onclick="selectinitgate()">close' +
@@ -342,7 +342,7 @@ var fmiconf = '<div id="fmiconf"><br>&nbsp;&nbsp;'+
 	'<input class="button addlist" type="radio" name="enable" value="true" onclick="selectenable()"  checked="checked">enable'+
 	'&nbsp;<input class="button addlist" type="radio" name="enable" value="false" onclick="selectenable()">disable' +
 	'<br>&nbsp;&nbsp;*index:'+
-	'<input class="button value" type="text" name="index" id="index">'+
+	'<input class="button value" type="text" name="index" id="index"  onkeydown=octkeydown(this) onkeyup=octkeyup(this)>'+
 	'<br>&nbsp;&nbsp;&nbsp;cir:'+
 	'<input class="button value" type="text" name="cir" id="cir" onkeydown=octkeydown(this) onkeyup=octkeyup(this)>'+
 	'<br>&nbsp;&nbsp;&nbsp;cbs:'+
