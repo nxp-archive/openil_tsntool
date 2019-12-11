@@ -38,7 +38,7 @@ def loadNetconf(xmlstr, device):
     #start the netconf request
     session = netconf.Session.connect(device, int('830'), str('root'))
     dstype = netconf.RUNNING
-    status = session.editConfig(target=dstype, source=xmlstr, defop=netconf.NC_EDIT_DEFOP_REPLACE,
+    status = session.editConfig(target=dstype, source=xmlstr, defop=netconf.NC_EDIT_DEFOP_MERGE,
 	erropt=netconf.NC_EDIT_ERROPT_NOTSET, testopt=netconf.NC_EDIT_TESTOPT_TESTSET)
     print('editconfig %s feedback: %s\n'%(dstype, status));
     getfeedback = session.getConfig(dstype);
