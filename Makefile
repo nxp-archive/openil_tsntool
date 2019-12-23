@@ -36,7 +36,9 @@ TSTAMP_BIN = timestamping
 
 LIB_VERSION = 0
 
-build: $(TSN_LIB) $(TSN_BIN) $(TSN_EVENT) $(TSTAMP_BIN)
+build: $(TSN_LIB) $(TSN_BIN)
+
+tools: $(TSN_EVENT) $(TSTAMP_BIN)
 
 $(TSN_LIB): $(LIB_DEPS)
 	$(CC) -shared $(LIB_OBJ) -o $@ $(LIB_LDFLAGS)
