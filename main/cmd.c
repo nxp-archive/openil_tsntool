@@ -424,15 +424,20 @@ uint64_t get_seconds_time(char *optbuf)
 
 	pt = strrchr(optarg, '.');
 	if (pt) {
+		int i = 0;
+
 		basetimel = strtoul(pt + 1, NULL, 10);
 		strncpy(bufs, optbuf, pt - optbuf);
-
+		pt++;
+		while (*(pt++) == '0') i++;
 		basetimeh = strtoul(bufs, NULL, 10);
 		while (basetimel && basetimel < 1000000000)
 			basetimel *= 10;
-
-		while (basetimel > 1000000000)
+		basetimel /= 10;
+		while (i) {
 			basetimel /= 10;
+			i--;
+		}
 
 		basetime = basetimeh * 1000000000 + basetimel;
 	} else {
