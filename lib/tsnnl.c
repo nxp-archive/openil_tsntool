@@ -1869,9 +1869,9 @@ int tsn_dscp_set(char *portname, bool disable, int index,
 					 &(disable), 0);
 
 
-	tsn_send_cmd_append_attr(msg, TSN_DSCP_ATTR_COS, &(dscp_conf->cos), sizeof(dscp_conf->cos));
+	tsn_send_cmd_append_attr(msg, TSN_DSCP_ATTR_COS, &(dscp_conf->cos), sizeof(int)/*sizeof(dscp_conf->cos)*/);
 
-	tsn_send_cmd_append_attr(msg, TSN_DSCP_ATTR_DPL, &(dscp_conf->dpl), sizeof(dscp_conf->dpl));
+	tsn_send_cmd_append_attr(msg, TSN_DSCP_ATTR_DPL, &(dscp_conf->dpl), sizeof(int)/*sizeof(dscp_conf->dpl)*/);
 
 	tsn_nla_nest_end(msg, dscpattr);
 
