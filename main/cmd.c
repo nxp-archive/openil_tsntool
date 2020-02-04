@@ -2252,7 +2252,7 @@ int cli_cmd_ct_set(UNUSED int argc, UNUSED char *argv[], UNUSED int cmdnumber)
 
 	optind = 0;
 
-	while ((c = getopt_long(argc, argv, "d:h:q", long_options, &option_index)) != -1) {
+	while ((c = getopt_long(argc, argv, "d:q:h", long_options, &option_index)) != -1) {
 		switch (c) {
 		case 'd':
 			strcpy(portname, optarg);
