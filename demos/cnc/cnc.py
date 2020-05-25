@@ -313,7 +313,7 @@ def createsgixml(component, configdata):
         basetime = ET.SubElement(sgitable, 'psfp:admin-base-time');
         seconds = ET.SubElement(basetime, 'psfp:seconds');
         seconds.text = str(int(zs));
-        fragseconds = ET.SubElement(basetime, 'psfp:fractional-seconds');
+        fragseconds = ET.SubElement(basetime, 'psfp:nanoseconds');
         fragseconds.text = xshu;
 
 def createfmixml(component, configdata):
