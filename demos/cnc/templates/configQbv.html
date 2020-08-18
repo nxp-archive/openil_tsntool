@@ -184,8 +184,8 @@ function confirmset()
 			alert("Period value Error");
 			return;
 		}
-
-		qbvadmin["entry"].push({gate: $("#"+gatep).val(), period: $("#"+periodp).val()});
+		gatevalue = parseInt($("#"+gatep).val());
+		qbvadmin["entry"].push({gate: gatevalue, period: $("#"+periodp).val()});
 	}
 	}
 	console.log(qbvadmin);
