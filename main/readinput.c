@@ -24,7 +24,7 @@
 #define EDITOR_DEFAULT "vi"
 #define EDITOR_ENV "TEXT_EDITOR"
 
-volatile int multiline;
+extern int multiline;
 volatile char *last_tmpfile;
 
 extern struct cli_cmd cli_commands[];

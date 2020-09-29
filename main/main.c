@@ -31,7 +31,7 @@ int VERBOSE_CONDITION = 0;
 extern struct cli_cmd cli_commands[];
 
 #define TSNTOOL_VERSION "V0.4"
-
+char some_msg[4096];
 const char *cli_version =
 "tsntool " TSNTOOL_VERSION "\n"
 "Copyright 2018-2019 NXP\n";

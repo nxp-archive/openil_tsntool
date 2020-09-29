@@ -36,9 +36,8 @@ extern int VERBOSE_CONDITION;
 #define SWITCH_PORTS_NUMBER 5
 #define MAX_ARG_LEN 30
 
-
+extern char some_msg[4096];
 #define UNUSED __attribute__((__unused__))
-char some_msg[4096];
 #define INSTRUCTION(output, format, args...) {snprintf(some_msg, 4095, format, ##args); fprintf(output, "\n  %s", some_msg); }
 #define ERROR(function, format, args...) {snprintf(some_msg, 4095, format, ##args); fprintf(stderr, "%s: %s\n", function, some_msg); }
 enum {
