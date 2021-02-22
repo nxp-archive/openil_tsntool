@@ -57,6 +57,13 @@ Open a browser in local domain machine.
 Input the ip of webserver PC:
 http://10.193.20.147:8180
 
+
+Docker Run:
+You could not to install the softwares as up steps. Replace by running a docker image:
+Just to run:
+
+docker run  --net=host -t -i liupoer/cncdemo:v1 /bin/bash /etc/rc.d/rc.local
+
 HISTORY:
 v1: Support Qbv and Qbu setting.
     Recommend to check the boards with tsntool to check the real configure
