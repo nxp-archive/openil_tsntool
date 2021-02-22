@@ -99,7 +99,7 @@ var deviceip;
 	function getnameip() {
 		var devname = getUrlParam("name");
 		var devip = getUrlParam("ip");
-		var header =  "<h1 style=\"margin-bottom:0;\">SETTING "+devname+" : "+devip+"</h1>";
+		var header =  "<h1 class=\"sidebar pure-u-1 pure-u-md-1-4\" >SETTING "+devname+" : "+devip+"</h1>";
 		devicename = devname;
 		deviceip = devip;
 		document.getElementById("container").innerHTML = header; 
@@ -199,9 +199,9 @@ function reselect()
 }
 
 function addtsnset() {
-	var btport = "<div id=\"aconfig\" style=\"top:0;bottom:0;float:left;overflow-x：scroll;width:100%;border:1px solid #000;\"> \
+	var btport = "<div class=\"sidebar pure-u-1 pure-u-md-1-4\" id=\"aconfig\" > \
 				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; \
-			<select class=\"button\" id=\"tsnprotocol\" name=\"tsnprotocol\" onchange=\"reselect()\"> \
+			<select class=\"pure-button\" id=\"tsnprotocol\" name=\"tsnprotocol\" onchange=\"reselect()\"> \
 			<option value=\"qbv\" selected>qbv</option> \
 			<option value=\"qci\">qci</option> \
 			<option value=\"qbu\">qbu</option> \
@@ -209,11 +209,11 @@ function addtsnset() {
 			<option value=\"p8021cb\">p8021cb</option> \
 			</select>" ;
 	$('#btaddtsn').after(btport);
-	$('#tsnprotocol').after('<div style="position:relative;left:20px;top:2px"> \
+	$('#tsnprotocol').after('<div class="sidebar pure-u-1 pure-u-md-1-4" > \
 				<iframe id="configframe" name="configframe" style="position:float;top:200;margin=10px;width:300px;height:400px;"></iframe> \
 				</div>');
 	$('#configframe').after('&nbsp;&nbsp;<button id="configcancle" onclick="aconfigremove();" \
-				type="button" class="button configcancle">cancel</button>');
+				type="button" class="pure-button configcancle">cancel</button>');
 	$('#configcancle').after('</div>');
 	window.configframe.location.href = "/configQbvHTML?name="+devicename+"&ip="+deviceip;
 }
@@ -241,21 +241,21 @@ function getconfig() {
 </head>
 <body>
 
-<div id="container" style="width:100%"></div>
+<div class="pure-form pure-form-stacked" id="container" style="width:100%"></div>
  
 <script>
 getnameip();
 </script>
 
-<div id="header" style="background-color:#FFA500;">
+<div class="sidebar pure-u-1 pure-u-md-1-4" id="header" >
 <h1 style="margin-bottom:0;"></h1></div>
  
-<div id="menu" style="background-color:#FFD700;height:600px;width:30%;float:left;border:1px solid #000;">
+<div class="pure-form pure-form-stacked" id="menu" style="height:600px;width:30%;float:left;border:1px solid #000;">
 <br>
 &nbsp;&nbsp;&nbsp;
 <b>  ADD TSN SETTING
 &nbsp;
-<button type="botton" class="button addtsn" id="btaddtsn" onclick="addtsnset()">+</button>
+<button type="botton" class="pure-button" id="btaddtsn" onclick="addtsnset()">+</button>
 <br>
 </b>
 <br>
@@ -263,19 +263,19 @@ getnameip();
 &nbsp;&nbsp;&nbsp;
 <b>  STATUS
 &nbsp;
-<button type="button" class="button Qbv" onclick="getconfig()">Get Config</button>
+<button type="button" class="pure-button Qbv" onclick="getconfig()">Get Config</button>
 
 </b>
 <br>
 </div>
-<div style="overflow: auto;height:600px;width:69%;background-color:#EEEEEE;float:left;border:1px solid #000;">
-<div  id="outputcontent" style="top:0;bottom:0;overflow-y：scroll;background-color:#EEEEEE;height:100%;width:100%;float:left;">
+<div class="sidebar pure-u-1 pure-u-md-1-4" style="overflow: auto;height:600px;width:69%;background-color:#EEEEEE;float:left;border:1px solid #000;">
+<div class="pure-form pure-form-stacked" id="outputcontent" style="top:0;bottom:0;overflow-y：scroll;background-color:#EEEEEE;height:100%;width:100%;float:left;">
 	console output<br> 
 </div>
 </div>
-<div id="footer" style="background-color:#FFA500;clear:both;text-align:center;">
+<div class="sidebar pure-u-1 pure-u-md-1-4" id="footer" style="clear:both;text-align:center;">
 www.nxp.com</div>
 
-<button class="button return" onclick="javascript:window.location.replace('/');"> return </button>
+<button class="pure-button return" onclick="javascript:window.location.replace('/');"> return </button>
 </body>
 </html>
